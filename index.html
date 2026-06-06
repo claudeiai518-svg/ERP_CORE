@@ -418,6 +418,14 @@ select.filter-sel:focus { border-color: var(--blue); outline: none; }
 .config-item h4 { font-size: 14px; font-weight: 700; color: var(--navy); }
 .config-item p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
 
+
+/* Skeleton loader */
+.skeleton { background: linear-gradient(90deg, var(--bg) 25%, var(--bg2) 50%, var(--bg) 75%);
+  background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 6px; }
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+.sk-row { height: 44px; margin-bottom: 2px; width: 100%; }
+.sk-stat { height: 90px; border-radius: 12px; }
+.sk-card { height: 320px; border-radius: 12px; }
 /* ============================================================
    ANIMACIONES
    ============================================================ */
@@ -594,12 +602,50 @@ select.filter-sel:focus { border-color: var(--blue); outline: none; }
 // CONFIGURACIÓN
 // ============================================================
 const APP = {
-  // ⚠️ REEMPLAZAR con la URL de tu Google Apps Script Web App
   SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzYoLL7nlwDKe0SGqhjY1PsktZxMo5DdK7PCPiK5QtejxipmOJblgVJSr-GtQfvBN3b/exec',
   token: null,
   sesion: null,
   currentView: 'dashboard',
   cache: {},
+  // TTL en ms por tipo de dato (cuánto tiempo guardar en cache)
+  CACHE_TTL: {
+    // Catálogos: cambian poco → 10 minutos
+    'MAESTROS.*': 600000,
+    'CLIENTES.listarTipos': 600000,
+    'USUARIOS.listarRoles': 600000,
+    'EMPLEADOS.listarCargos': 600000,
+    'INVENTARIO.listarBodegas': 600000,
+    'INVENTARIO.listarCategorias': 600000,
+    'EMPRESA.obtener': 300000,
+    // Datos operativos: 30 segundos
+    'DEFAULT': 30000,
+  },
+};
+
+// Cache helpers
+const Cache = {
+  key: (m, a, d) => m + '.' + a + '|' + JSON.stringify(d),
+  ttl: (m, a) => {
+    const k = m + '.' + a;
+    for (const [pat, ttl] of Object.entries(APP.CACHE_TTL)) {
+      if (pat.includes('*') ? k.startsWith(pat.replace('.*','')) : k === pat) return ttl;
+    }
+    return APP.CACHE_TTL.DEFAULT;
+  },
+  get: (m, a, d) => {
+    const k = Cache.key(m, a, d);
+    const entry = APP.cache[k];
+    if (!entry) return null;
+    if (Date.now() - entry.ts > Cache.ttl(m, a)) { delete APP.cache[k]; return null; }
+    return entry.data;
+  },
+  set: (m, a, d, data) => {
+    APP.cache[Cache.key(m, a, d)] = { data, ts: Date.now() };
+  },
+  invalidate: (modulo) => {
+    Object.keys(APP.cache).forEach(k => { if (k.startsWith(modulo)) delete APP.cache[k]; });
+  },
+  clear: () => { APP.cache = {}; },
 };
 
 // ============================================================
@@ -645,7 +691,25 @@ async function apiDemo(modulo, accion, datos = {}) {
 function isDemo() {
   return false; // URL de producción configurada
 }
-const callApi = async (m, a, d) => isDemo() ? apiDemo(m, a, d) : api(m, a, d);
+// Módulos donde NUNCA usar cache (mutaciones)
+const NO_CACHE = new Set(['login','logout','crear','actualizar','eliminar','inactivar',
+  'toggleActivo','cambiarPassword','ajustarStock','inicializar','formatear','proteger','crearSucursal',
+  'crearArea','crearCentroCosto','actualizarUsuario']);
+
+async function callApi(m, a, d = {}) {
+  if (isDemo()) return apiDemo(m, a, d);
+  // Leer cache si aplica
+  if (!NO_CACHE.has(a)) {
+    const cached = Cache.get(m, a, d);
+    if (cached) return cached;
+  }
+  const result = await api(m, a, d);
+  // Guardar en cache si fue exitoso y no es mutación
+  if (result.ok && !NO_CACHE.has(a)) Cache.set(m, a, d, result);
+  // Invalidar cache del módulo tras mutación exitosa
+  if (result.ok && NO_CACHE.has(a)) Cache.invalidate(m);
+  return result;
+}
 
 // ============================================================
 // DATOS DE DEMO
@@ -778,6 +842,7 @@ function initApp() {
   document.getElementById('sidebarAvatar').textContent = nombre.charAt(0).toUpperCase();
   navigate('dashboard');
   loadAlertBadge();
+  setTimeout(initPrefetch, 500);
 }
 
 async function loadAlertBadge() {
@@ -809,11 +874,42 @@ function navigate(view) {
   else mainContent(`<div class="empty-state"><i class="fas fa-wrench"></i><h4>Vista en construcción</h4><p>Próximamente disponible</p></div>`);
 }
 
+// Prefetch: al pasar el mouse por un nav-item, pre-carga los datos en cache
+const PREFETCH_MAP = {
+  clientes:    [['CLIENTES','listar',{}], ['CLIENTES','listarTipos',{}]],
+  empleados:   [['EMPLEADOS','listar',{}], ['EMPLEADOS','listarCargos',{}]],
+  proveedores: [['PROVEEDORES','listar',{}]],
+  inventario:  [['INVENTARIO','listar',{}], ['INVENTARIO','alertasStock',{}]],
+  usuarios:    [['USUARIOS','listar',{}], ['USUARIOS','listarRoles',{}]],
+  empresa:     [['EMPRESA','obtener',{}]],
+  dashboard:   [['DASHBOARD','indicadores',{}]],
+};
+
+function prefetch(view) {
+  if (!APP.token || view === APP.currentView) return;
+  const calls = PREFETCH_MAP[view] || [];
+  calls.forEach(([m, a, d]) => {
+    if (!Cache.get(m, a, d)) callApi(m, a, d); // pre-carga silenciosa
+  });
+}
+
+// Inyectar prefetch en nav items después de que el DOM esté listo
+function initPrefetch() {
+  document.querySelectorAll('.nav-item[data-view]').forEach(el => {
+    const view = el.dataset.view;
+    el.addEventListener('mouseenter', () => prefetch(view));
+  });
+}
+
 function refreshView() {
   const icon = document.getElementById('refreshIcon');
   icon.style.animation = 'spin .7s linear infinite';
   setTimeout(() => { icon.style.animation = ''; }, 700);
-  APP.cache = {};
+  // Limpiar solo el módulo actual para no perder cache de otros
+  const modMap = { dashboard:'DASHBOARD', clientes:'CLIENTES', empleados:'EMPLEADOS',
+    proveedores:'PROVEEDORES', inventario:'INVENTARIO', usuarios:'USUARIOS', empresa:'EMPRESA' };
+  const mod = modMap[APP.currentView];
+  if (mod) Cache.invalidate(mod); else Cache.clear();
   navigate(APP.currentView);
 }
 
@@ -825,7 +921,14 @@ function mainContent(html) {
 // VISTA: DASHBOARD
 // ============================================================
 async function dashboard() {
-  mainContent(`<div style="display:flex;align-items:center;gap:10px;color:var(--text-muted);padding:60px;justify-content:center"><span class="spinner" style="border-color:rgba(15,31,92,.2);border-top-color:var(--navy)"></span> Cargando indicadores…</div>`);
+  mainContent(`
+  <div class="stats-grid" style="margin-bottom:24px">
+    ${[1,2,3,4,5].map(()=>'<div class="skeleton sk-stat"></div>').join('')}
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:20px">
+    <div class="skeleton sk-card"></div>
+    <div class="skeleton sk-card"></div>
+  </div>`);
   const res = await callApi('DASHBOARD', 'indicadores', {});
   if (!res.ok) { mainContent(`<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h4>Error</h4><p>${res.mensaje}</p></div>`); return; }
   const d = res.datos;
@@ -947,7 +1050,7 @@ async function dashboard() {
 // VISTA: CLIENTES
 // ============================================================
 async function clientes() {
-  mainContent(`<div style="padding:60px;text-align:center;color:var(--text-muted)"><span class="spinner" style="border-color:rgba(15,31,92,.2);border-top-color:var(--navy)"></span></div>`);
+  mainContent(`<div class="card"><div class="card-header"><div class="skeleton" style="height:20px;width:180px;border-radius:4px"></div></div><div class="card-body" style="padding:16px 20px">${[1,2,3,4,5,6].map(()=>'<div class="skeleton sk-row"></div>').join('')}</div></div>`);
   const res = await callApi('CLIENTES', 'listar', {});
   const lista = res.ok ? res.datos : [];
 
@@ -1058,7 +1161,7 @@ async function actualizarCliente(id) {
 // VISTA: EMPLEADOS
 // ============================================================
 async function empleados() {
-  mainContent(`<div style="padding:60px;text-align:center;color:var(--text-muted)"><span class="spinner" style="border-color:rgba(15,31,92,.2);border-top-color:var(--navy)"></span></div>`);
+  mainContent(`<div class="card"><div class="card-header"><div class="skeleton" style="height:20px;width:180px;border-radius:4px"></div></div><div class="card-body" style="padding:16px 20px">${[1,2,3,4,5,6].map(()=>'<div class="skeleton sk-row"></div>').join('')}</div></div>`);
   const res = await callApi('EMPLEADOS', 'listar', {});
   const lista = res.ok ? res.datos : [];
   const estadoColor = { Activo:'success', Inactivo:'danger', Vacaciones:'warning', Incapacidad:'info' };
@@ -1410,7 +1513,7 @@ function modalEditarUsuario(u) {
       </div>
     </div>`,
     [{label:'Cancelar', cls:'btn-secondary', action:'closeModal()'},
-     {label:'Guardar cambios', cls:'btn-primary', action:\`actualizarUsuario('${u.ID_USUARIO}')\`}]);
+     {label:'Guardar cambios', cls:'btn-primary', action:"actualizarUsuario('" + u.ID_USUARIO + "')"}]);
 }
 
 async function actualizarUsuario(id) {
@@ -1430,7 +1533,7 @@ function modalCambiarPassword(id, username) {
       <i class="fas fa-exclamation-triangle"></i> El usuario deberá usar la nueva contraseña en su próximo acceso.
     </div>`,
     [{label:'Cancelar', cls:'btn-secondary', action:'closeModal()'},
-     {label:'Cambiar contraseña', cls:'btn-primary', action:\`confirmarCambioPassword('${id}')\`}]);
+     {label:'Cambiar contraseña', cls:'btn-primary', action:"confirmarCambioPassword('" + id + "')"}]);
 }
 
 async function confirmarCambioPassword(id) {
@@ -1499,7 +1602,7 @@ function previewLogo(input) {
 
 function previewLogoUrl(url) {
   if (!url) { document.getElementById('logoPreview').innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center"><i class="fas fa-cloud-upload-alt" style="font-size:28px;display:block;margin-bottom:8px"></i>Clic para subir imagen</div>'; return; }
-  document.getElementById('logoPreview').innerHTML = '<img src="'+url+'" style="max-width:100%;max-height:136px;object-fit:contain" onerror="this.style.display='none'"/>';
+  document.getElementById('logoPreview').innerHTML = '<img src="'+url+'" style="max-width:100%;max-height:136px;object-fit:contain" onerror="this.style.display=&quot;none&quot;"/>';
 }
 
 async function guardarEmpresa(id) {
