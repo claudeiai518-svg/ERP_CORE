@@ -811,6 +811,8 @@ async function doLogin() {
   if (!res.ok) { showLoginError(res.mensaje); return; }
   APP.token = res.datos.token;
   APP.sesion = res.datos;
+  localStorage.setItem('erp_token', APP.token);
+  localStorage.setItem('erp_sesion', JSON.stringify(APP.sesion));
   initApp();
 }
 
@@ -823,6 +825,8 @@ function showLoginError(msg) {
 async function doLogout() {
   await callApi('AUTH', 'logout', { token: APP.token });
   APP.token = null; APP.sesion = null; APP.cache = {};
+  localStorage.removeItem('erp_token');
+  localStorage.removeItem('erp_sesion');
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('loginUser').value = '';
@@ -1796,6 +1800,20 @@ function toast(msg, type = 'info') {
 // INIT
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
+  // Restaurar sesión si existe
+  const savedToken = localStorage.getItem('erp_token');
+  const savedSesion = localStorage.getItem('erp_sesion');
+  if (savedToken && savedSesion) {
+    try {
+      APP.token = savedToken;
+      APP.sesion = JSON.parse(savedSesion);
+      initApp();
+      return;
+    } catch(e) {
+      localStorage.removeItem('erp_token');
+      localStorage.removeItem('erp_sesion');
+    }
+  }
   document.getElementById('loginUser').focus();
   if (isDemo()) {
     document.querySelectorAll('.demo-hint').forEach(el => el.style.display = 'block');
