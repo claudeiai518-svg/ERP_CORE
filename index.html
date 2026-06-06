@@ -607,30 +607,29 @@ const APP = {
 // ============================================================
 async function api(modulo, accion, datos = {}) {
   return new Promise((resolve) => {
-    const cbName = '_erp_cb_' + Date.now();
+    const cbName = '_erp_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2);
     const payload = encodeURIComponent(JSON.stringify({ modulo, accion, datos, token: APP.token }));
-    const url = `${APP.SCRIPT_URL}?callback=${cbName}&payload=${payload}`;
+    const url = APP.SCRIPT_URL + '?callback=' + cbName + '&payload=' + payload;
 
-    // Timeout de 15 segundos
     const timer = setTimeout(() => {
-      delete window[cbName];
+      if (window[cbName]) { delete window[cbName]; }
       if (script.parentNode) script.parentNode.removeChild(script);
-      resolve({ ok: false, mensaje: 'Tiempo de espera agotado (15s). Verifica la URL del script.' });
-    }, 15000);
+      resolve({ ok: false, mensaje: 'Tiempo de espera agotado. Verifica que la Web App esté publicada como "Cualquier persona".' });
+    }, 20000);
 
-    window[cbName] = (data) => {
+    window[cbName] = function(data) {
       clearTimeout(timer);
       delete window[cbName];
-      if (script.parentNode) script.parentNode.removeChild(script);
+      if (script && script.parentNode) script.parentNode.removeChild(script);
       resolve(data);
     };
 
     const script = document.createElement('script');
     script.src = url;
-    script.onerror = () => {
+    script.onerror = function() {
       clearTimeout(timer);
-      delete window[cbName];
-      resolve({ ok: false, mensaje: 'No se pudo conectar con el servidor. Verifica la URL y los permisos de la Web App.' });
+      if (window[cbName]) delete window[cbName];
+      resolve({ ok: false, mensaje: 'Error de conexión. Asegúrate de que la Web App esté publicada para "Cualquier persona" sin autenticación.' });
     };
     document.head.appendChild(script);
   });
@@ -1352,9 +1351,11 @@ async function usuarios() {
                 <td style="font-size:12px;color:var(--text-muted)">${u.ULTIMO_ACCESO||'-'}</td>
                 <td>
                   <div style="display:flex;gap:4px">
-                    <button class="btn btn-secondary btn-sm" onclick="toggleUsuario('${u.ID_USUARIO}')">
-                      <i class="fas fa-${u.ACTIVO?'ban':'check'}"></i> ${u.ACTIVO?'Inactivar':'Activar'}
+                    <button class="btn btn-secondary btn-sm btn-icon" title="Editar" onclick="modalEditarUsuario(${JSON.stringify(u).replace(/"/g,'&quot;')})"><i class="fas fa-pen"></i></button>
+                    <button class="btn btn-secondary btn-sm btn-icon" title="${u.ACTIVO?'Inactivar':'Activar'}" onclick="toggleUsuario('${u.ID_USUARIO}')">
+                      <i class="fas fa-${u.ACTIVO?'ban':'check'}"></i>
                     </button>
+                    <button class="btn btn-secondary btn-sm btn-icon" title="Cambiar contraseña" onclick="modalCambiarPassword('${u.ID_USUARIO}','${u.USERNAME}')"><i class="fas fa-key"></i></button>
                   </div>
                 </td>
               </tr>`).join('')}
@@ -1395,6 +1396,52 @@ async function crearUsuario() {
   else toast(res.mensaje,'error');
 }
 
+function modalEditarUsuario(u) {
+  openModal('Editar Usuario: ' + u.USERNAME, `
+    <div class="form-grid">
+      <div class="f-group full"><label>Empleado</label><input id="usem_e" value="${u.EMPLEADO}"/></div>
+      <div class="f-group"><label>Username</label><input id="usu_e" value="${u.USERNAME}" readonly style="background:var(--bg);color:var(--text-muted)"/></div>
+      <div class="f-group"><label>Rol</label>
+        <select id="usrol_e">
+          <option ${u.ROL==='Administrador'?'selected':''}>Administrador</option>
+          <option ${u.ROL==='Coordinador'?'selected':''}>Coordinador</option>
+          <option ${u.ROL==='Técnico'?'selected':''}>Técnico</option>
+        </select>
+      </div>
+    </div>`,
+    [{label:'Cancelar', cls:'btn-secondary', action:'closeModal()'},
+     {label:'Guardar cambios', cls:'btn-primary', action:\`actualizarUsuario('${u.ID_USUARIO}')\`}]);
+}
+
+async function actualizarUsuario(id) {
+  const datos = { ID_USUARIO:id, EMPLEADO:v('usem_e'), ROL:v('usrol_e') };
+  const res = await callApi('USUARIOS', 'actualizar', datos);
+  if (res.ok) { toast('Usuario actualizado','success'); closeModal(); usuarios(); }
+  else toast(res.mensaje,'error');
+}
+
+function modalCambiarPassword(id, username) {
+  openModal('Cambiar Contraseña: ' + username, `
+    <div class="form-grid">
+      <div class="f-group full"><label>Nueva contraseña *</label><input id="pwn" type="password" placeholder="Mínimo 6 caracteres"/></div>
+      <div class="f-group full"><label>Confirmar contraseña *</label><input id="pwc" type="password"/></div>
+    </div>
+    <div style="background:var(--warning-bg);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:12px;color:var(--warning)">
+      <i class="fas fa-exclamation-triangle"></i> El usuario deberá usar la nueva contraseña en su próximo acceso.
+    </div>`,
+    [{label:'Cancelar', cls:'btn-secondary', action:'closeModal()'},
+     {label:'Cambiar contraseña', cls:'btn-primary', action:\`confirmarCambioPassword('${id}')\`}]);
+}
+
+async function confirmarCambioPassword(id) {
+  const p1 = v('pwn'), p2 = v('pwc');
+  if (!p1 || p1.length < 6) { toast('Mínimo 6 caracteres','warning'); return; }
+  if (p1 !== p2) { toast('Las contraseñas no coinciden','warning'); return; }
+  const res = await callApi('USUARIOS', 'cambiarPassword', { idUsuario:id, passwordNuevo:p1 });
+  if (res.ok) { toast('Contraseña actualizada','success'); closeModal(); }
+  else toast(res.mensaje,'error');
+}
+
 // ============================================================
 // VISTA: EMPRESA
 // ============================================================
@@ -1402,22 +1449,57 @@ async function empresa() {
   const res = await callApi('EMPRESA', 'obtener', {});
   const d = res.ok ? res.datos : {};
   mainContent(`
-  <div class="card" style="max-width:680px">
-    <div class="card-header">
-      <h3><i class="fas fa-building" style="color:var(--blue);margin-right:8px"></i>Datos de Mi Empresa</h3>
-      <button class="btn btn-primary btn-sm" onclick="guardarEmpresa('${d.ID_EMPRESA||''}')"><i class="fas fa-save"></i> Guardar</button>
+  <div style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start">
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fas fa-building" style="color:var(--blue);margin-right:8px"></i>Datos de Mi Empresa</h3>
+        <button class="btn btn-primary btn-sm" onclick="guardarEmpresa('${d.ID_EMPRESA||''}')"><i class="fas fa-save"></i> Guardar</button>
+      </div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="f-group full"><label>Nombre / Razón Social *</label><input id="epn" value="${d.NOMBRE||''}" /></div>
+          <div class="f-group"><label>NIT *</label><input id="epnit" value="${d.NIT||''}" /></div>
+          <div class="f-group"><label>Teléfono</label><input id="eptel" value="${d.TELEFONO||''}" /></div>
+          <div class="f-group full"><label>Dirección</label><input id="epdir" value="${d.DIRECCION||''}" /></div>
+          <div class="f-group full"><label>Email</label><input id="epemail" type="email" value="${d.EMAIL||''}" /></div>
+          <div class="f-group full"><label>Ciudad</label><input id="epciudad" value="${d.CIUDAD||''}" /></div>
+          <div class="f-group full"><label>Sitio Web</label><input id="epweb" value="${d.WEB||''}" placeholder="https://miempresa.com"/></div>
+        </div>
+      </div>
     </div>
-    <div class="card-body">
-      <div class="form-grid">
-        <div class="f-group full"><label>Nombre / Razón Social *</label><input id="epn" value="${d.NOMBRE||''}" /></div>
-        <div class="f-group"><label>NIT *</label><input id="epnit" value="${d.NIT||''}" /></div>
-        <div class="f-group"><label>Teléfono</label><input id="eptel" value="${d.TELEFONO||''}" /></div>
-        <div class="f-group full"><label>Dirección</label><input id="epdir" value="${d.DIRECCION||''}" /></div>
-        <div class="f-group full"><label>Email</label><input id="epemail" type="email" value="${d.EMAIL||''}" /></div>
-        <div class="f-group full"><label>Logo (URL)</label><input id="eplogo" value="${d.LOGO||''}" placeholder="https://…"/></div>
+    <div class="card">
+      <div class="card-header"><h3><i class="fas fa-image" style="color:var(--blue);margin-right:8px"></i>Logo</h3></div>
+      <div class="card-body" style="text-align:center">
+        <div id="logoPreview" style="width:100%;height:140px;border:2px dashed var(--border);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;margin-bottom:14px;overflow:hidden;background:var(--bg);cursor:pointer" onclick="document.getElementById('logoFile').click()">
+          ${d.LOGO ? '<img src="'+d.LOGO+'" style="max-width:100%;max-height:136px;object-fit:contain"/>' : '<div style="color:var(--text-muted);font-size:13px;text-align:center"><i class="fas fa-cloud-upload-alt" style="font-size:28px;display:block;margin-bottom:8px"></i>Clic para subir imagen</div>'}
+        </div>
+        <input type="file" id="logoFile" accept="image/*" style="display:none" onchange="previewLogo(this)"/>
+        <button class="btn btn-secondary btn-sm" style="width:100%;margin-bottom:8px" onclick="document.getElementById('logoFile').click()">
+          <i class="fas fa-upload"></i> Subir imagen
+        </button>
+        <div class="f-group" style="text-align:left">
+          <label style="font-size:11px">O pegar URL de imagen</label>
+          <input id="eplogo" value="${d.LOGO||''}" placeholder="https://…" oninput="previewLogoUrl(this.value)" style="font-size:12px"/>
+        </div>
       </div>
     </div>
   </div>`);
+}
+
+function previewLogo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('logoPreview').innerHTML = '<img src="'+e.target.result+'" style="max-width:100%;max-height:136px;object-fit:contain"/>';
+    document.getElementById('eplogo').value = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function previewLogoUrl(url) {
+  if (!url) { document.getElementById('logoPreview').innerHTML = '<div style="color:var(--text-muted);font-size:13px;text-align:center"><i class="fas fa-cloud-upload-alt" style="font-size:28px;display:block;margin-bottom:8px"></i>Clic para subir imagen</div>'; return; }
+  document.getElementById('logoPreview').innerHTML = '<img src="'+url+'" style="max-width:100%;max-height:136px;object-fit:contain" onerror="this.style.display='none'"/>';
 }
 
 async function guardarEmpresa(id) {
