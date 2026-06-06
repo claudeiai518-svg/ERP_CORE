@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ERP CORE PRO</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+<style>
+/* ============================================================
+   VARIABLES Y RESET
+   ============================================================ */
+:root {
+  --navy:        #0f1f5c;
+  --navy-mid:    #1a2f7a;
+  --navy-light:  #243898;
+  --blue:        #2952cc;
+  --blue-light:  #3d6ae8;
+  --accent:      #f0a500;
+  --accent-light:#ffc840;
+  --white:       #ffffff;
+  --bg:          #f4f6fb;
+  --bg2:         #eef1f8;
+  --surface:     #ffffff;
+  --border:      #dde3f3;
+  --text:        #111827;
+  --text-mid:    #374151;
+  --text-muted:  #6b7280;
+  --success:     #16a34a;
+  --success-bg:  #dcfce7;
+  --warning:     #d97706;
+  --warning-bg:  #fef3c7;
+  --danger:      #dc2626;
+  --danger-bg:   #fee2e2;
+  --info:        #0284c7;
+  --info-bg:     #e0f2fe;
+  --sidebar-w:   260px;
+  --topbar-h:    64px;
+  --radius:      12px;
+  --radius-sm:   8px;
+  --shadow:      0 2px 12px rgba(15,31,92,.08);
+  --shadow-md:   0 4px 24px rgba(15,31,92,.13);
+  --shadow-lg:   0 8px 40px rgba(15,31,92,.18);
+  --trans:       .22s cubic-bezier(.4,0,.2,1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); }
+button { font-family: inherit; cursor: pointer; border: none; outline: none; }
+input, select, textarea { font-family: inherit; }
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+
+/* ============================================================
+   PANTALLA DE LOGIN
+   ============================================================ */
+#loginScreen {
+  position: fixed; inset: 0; z-index: 1000;
+  background: linear-gradient(135deg, var(--navy) 0%, var(--navy-mid) 50%, var(--blue) 100%);
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn .5s ease;
+}
+.login-bg-pattern {
+  position: absolute; inset: 0; overflow: hidden; opacity: .08;
+  background-image: repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%);
+  background-size: 20px 20px;
+}
+.login-card {
+  position: relative; z-index: 1;
+  background: var(--white); border-radius: 20px;
+  padding: 48px 44px; width: 420px;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp .5s cubic-bezier(.4,0,.2,1);
+}
+.login-logo {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 32px;
+}
+.login-logo-icon {
+  width: 48px; height: 48px; border-radius: 14px;
+  background: linear-gradient(135deg, var(--navy), var(--blue-light));
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 22px; box-shadow: 0 4px 16px rgba(41,82,204,.35);
+}
+.login-logo h1 { font-size: 20px; font-weight: 800; color: var(--navy); line-height: 1.1; }
+.login-logo span { font-size: 11px; font-weight: 500; color: var(--text-muted); letter-spacing: .06em; text-transform: uppercase; }
+.login-title { font-size: 26px; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
+.login-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 32px; }
+.form-group { margin-bottom: 18px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-mid); margin-bottom: 6px; }
+.form-group .input-wrap { position: relative; }
+.form-group .input-wrap i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; }
+.form-group input {
+  width: 100%; padding: 12px 14px 12px 40px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 14px; color: var(--text); background: var(--bg);
+  transition: border-color var(--trans), box-shadow var(--trans);
+}
+.form-group input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(41,82,204,.12); background: white; outline: none; }
+.btn-login {
+  width: 100%; padding: 14px; border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--blue), var(--navy-light));
+  color: white; font-size: 15px; font-weight: 700;
+  letter-spacing: .01em;
+  box-shadow: 0 4px 16px rgba(41,82,204,.35);
+  transition: all var(--trans); margin-top: 8px;
+}
+.btn-login:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(41,82,204,.4); }
+.btn-login:active { transform: translateY(0); }
+.login-error {
+  background: var(--danger-bg); color: var(--danger);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  font-size: 13px; font-weight: 500; margin-top: 14px;
+  display: none; align-items: center; gap: 8px;
+}
+.login-version { text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 28px; }
+.demo-hint {
+  background: var(--info-bg); border-radius: var(--radius-sm);
+  padding: 10px 14px; font-size: 12px; color: var(--info);
+  margin-bottom: 24px; line-height: 1.6;
+}
+
+/* ============================================================
+   LAYOUT PRINCIPAL
+   ============================================================ */
+#app { display: none; height: 100vh; overflow: hidden; }
+
+/* SIDEBAR */
+.sidebar {
+  position: fixed; top: 0; left: 0; bottom: 0; width: var(--sidebar-w);
+  background: linear-gradient(180deg, var(--navy) 0%, var(--navy-mid) 100%);
+  display: flex; flex-direction: column;
+  box-shadow: 4px 0 24px rgba(15,31,92,.18); z-index: 100;
+  transition: transform var(--trans);
+}
+.sidebar-brand {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+  display: flex; align-items: center; gap: 12px;
+}
+.brand-icon {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--blue-light), var(--accent));
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-size: 18px; box-shadow: 0 4px 12px rgba(0,0,0,.25);
+}
+.brand-text h2 { font-size: 16px; font-weight: 800; color: white; }
+.brand-text span { font-size: 10px; font-weight: 500; color: rgba(255,255,255,.5); letter-spacing: .08em; text-transform: uppercase; }
+
+.sidebar-user {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  display: flex; align-items: center; gap: 10px;
+}
+.user-avatar {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), var(--accent-light));
+  display: flex; align-items: center; justify-content: center;
+  color: var(--navy); font-size: 13px; font-weight: 700;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-info .name { font-size: 13px; font-weight: 600; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-info .role { font-size: 11px; color: rgba(255,255,255,.5); }
+.user-logout { color: rgba(255,255,255,.4); font-size: 14px; padding: 4px; cursor: pointer; transition: color var(--trans); }
+.user-logout:hover { color: var(--accent); }
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 12px 12px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.1) transparent; }
+.nav-section { margin-bottom: 8px; }
+.nav-section-label { font-size: 9.5px; font-weight: 700; color: rgba(255,255,255,.3); text-transform: uppercase; letter-spacing: .12em; padding: 10px 8px 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: 10px;
+  color: rgba(255,255,255,.65); font-size: 13.5px; font-weight: 500;
+  cursor: pointer; transition: all var(--trans); margin-bottom: 2px;
+  white-space: nowrap; overflow: hidden;
+}
+.nav-item i { width: 18px; text-align: center; font-size: 14px; flex-shrink: 0; }
+.nav-item:hover { background: rgba(255,255,255,.08); color: white; }
+.nav-item.active { background: linear-gradient(135deg, rgba(41,82,204,.5), rgba(41,82,204,.25)); color: white; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+.nav-item.active i { color: var(--accent); }
+
+.sidebar-footer { padding: 14px 20px; border-top: 1px solid rgba(255,255,255,.08); }
+.sidebar-version { font-size: 10px; color: rgba(255,255,255,.3); text-align: center; font-family: 'DM Mono', monospace; }
+
+/* TOPBAR */
+.topbar {
+  position: fixed; top: 0; left: var(--sidebar-w); right: 0; height: var(--topbar-h);
+  background: var(--white); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; padding: 0 28px; gap: 16px;
+  z-index: 90; box-shadow: 0 2px 8px rgba(15,31,92,.06);
+}
+.topbar-title { font-size: 18px; font-weight: 700; color: var(--navy); flex: 1; }
+.topbar-title span { font-size: 13px; font-weight: 400; color: var(--text-muted); margin-left: 8px; }
+.topbar-actions { display: flex; align-items: center; gap: 12px; }
+.topbar-btn {
+  width: 38px; height: 38px; border-radius: var(--radius-sm); border: 1.5px solid var(--border);
+  background: white; color: var(--text-mid); font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: all var(--trans); position: relative;
+}
+.topbar-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--info-bg); }
+.badge {
+  position: absolute; top: -4px; right: -4px; min-width: 16px; height: 16px;
+  background: var(--danger); color: white; font-size: 9px; font-weight: 700;
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  padding: 0 4px; border: 1.5px solid white;
+}
+
+/* MAIN CONTENT */
+.main {
+  margin-left: var(--sidebar-w); margin-top: var(--topbar-h);
+  padding: 28px; min-height: calc(100vh - var(--topbar-h));
+  overflow-y: auto; max-height: calc(100vh - var(--topbar-h));
+}
+
+/* ============================================================
+   COMPONENTES REUTILIZABLES
+   ============================================================ */
+
+/* Cards */
+.card {
+  background: var(--surface); border-radius: var(--radius);
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.card-header {
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-header h3 { font-size: 15px; font-weight: 700; color: var(--navy); }
+.card-body { padding: 20px 22px; }
+
+/* Stat Cards */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 18px; margin-bottom: 24px; }
+.stat-card {
+  background: var(--surface); border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 20px 22px;
+  display: flex; align-items: flex-start; gap: 16px;
+  box-shadow: var(--shadow); transition: transform var(--trans), box-shadow var(--trans);
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.stat-icon {
+  width: 48px; height: 48px; border-radius: 14px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.stat-icon.navy { background: rgba(15,31,92,.08); color: var(--navy); }
+.stat-icon.blue { background: rgba(41,82,204,.1); color: var(--blue); }
+.stat-icon.success { background: var(--success-bg); color: var(--success); }
+.stat-icon.warning { background: var(--warning-bg); color: var(--warning); }
+.stat-icon.danger { background: var(--danger-bg); color: var(--danger); }
+.stat-info { flex: 1; }
+.stat-value { font-size: 28px; font-weight: 800; color: var(--navy); line-height: 1; font-family: 'DM Mono', monospace; }
+.stat-label { font-size: 12.5px; color: var(--text-muted); font-weight: 500; margin-top: 4px; }
+.stat-trend { font-size: 11px; font-weight: 600; margin-top: 6px; }
+.stat-trend.up { color: var(--success); }
+.stat-trend.down { color: var(--danger); }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 18px; border-radius: var(--radius-sm);
+  font-size: 13.5px; font-weight: 600; transition: all var(--trans);
+  cursor: pointer; border: 1.5px solid transparent; white-space: nowrap;
+}
+.btn-primary { background: var(--navy); color: white; border-color: var(--navy); box-shadow: 0 2px 8px rgba(15,31,92,.22); }
+.btn-primary:hover { background: var(--navy-light); box-shadow: 0 4px 16px rgba(15,31,92,.3); transform: translateY(-1px); }
+.btn-secondary { background: white; color: var(--navy); border-color: var(--border); }
+.btn-secondary:hover { border-color: var(--navy); background: var(--bg); }
+.btn-success { background: var(--success); color: white; }
+.btn-success:hover { opacity: .9; }
+.btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover { opacity: .9; }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+.btn-icon { padding: 8px; width: 34px; height: 34px; justify-content: center; }
+
+/* Table */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+thead tr { background: var(--navy); }
+thead th { padding: 12px 16px; text-align: left; color: white; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+tbody tr { border-bottom: 1px solid var(--border); transition: background var(--trans); }
+tbody tr:hover { background: var(--bg2); }
+tbody td { padding: 12px 16px; color: var(--text-mid); vertical-align: middle; }
+tbody tr:last-child { border-bottom: none; }
+.td-mono { font-family: 'DM Mono', monospace; font-size: 12.5px; color: var(--blue); font-weight: 500; }
+
+/* Pills / Badges */
+.pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600;
+}
+.pill-success { background: var(--success-bg); color: var(--success); }
+.pill-danger  { background: var(--danger-bg);  color: var(--danger); }
+.pill-warning { background: var(--warning-bg); color: var(--warning); }
+.pill-info    { background: var(--info-bg);    color: var(--info); }
+.pill-navy    { background: rgba(15,31,92,.1); color: var(--navy); }
+.pill-dot::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* Search & Filter bar */
+.toolbar {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 18px; flex-wrap: wrap;
+}
+.search-box {
+  position: relative; flex: 1; min-width: 220px;
+}
+.search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; }
+.search-box input {
+  width: 100%; padding: 9px 12px 9px 36px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 13.5px; color: var(--text); background: white;
+  transition: border-color var(--trans);
+}
+.search-box input:focus { border-color: var(--blue); outline: none; box-shadow: 0 0 0 3px rgba(41,82,204,.1); }
+select.filter-sel {
+  padding: 9px 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 13.5px; color: var(--text-mid); background: white; cursor: pointer;
+  transition: border-color var(--trans);
+}
+select.filter-sel:focus { border-color: var(--blue); outline: none; }
+
+/* Forms */
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px,1fr)); gap: 16px; }
+.f-group { display: flex; flex-direction: column; gap: 6px; }
+.f-group label { font-size: 12.5px; font-weight: 600; color: var(--text-mid); }
+.f-group input, .f-group select, .f-group textarea {
+  padding: 10px 13px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 13.5px; color: var(--text); background: white; transition: border-color var(--trans);
+}
+.f-group input:focus, .f-group select:focus, .f-group textarea:focus {
+  border-color: var(--blue); outline: none; box-shadow: 0 0 0 3px rgba(41,82,204,.1);
+}
+.f-group textarea { resize: vertical; min-height: 80px; }
+.f-group.full { grid-column: 1 / -1; }
+
+/* Modal */
+.overlay {
+  position: fixed; inset: 0; background: rgba(15,31,92,.5);
+  z-index: 500; display: flex; align-items: center; justify-content: center;
+  padding: 20px; animation: fadeIn .2s ease;
+  backdrop-filter: blur(3px);
+}
+.modal {
+  background: white; border-radius: 18px;
+  width: 100%; max-width: 580px; max-height: 90vh;
+  overflow-y: auto; box-shadow: var(--shadow-lg);
+  animation: slideUp .25s cubic-bezier(.4,0,.2,1);
+}
+.modal-header {
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: white; z-index: 1;
+}
+.modal-header h3 { font-size: 16px; font-weight: 700; color: var(--navy); }
+.modal-close { width: 32px; height: 32px; border-radius: 8px; background: var(--bg2); color: var(--text-muted); font-size: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all var(--trans); border: none; }
+.modal-close:hover { background: var(--danger-bg); color: var(--danger); }
+.modal-body { padding: 22px 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+/* Toast */
+#toastContainer { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+.toast {
+  background: var(--navy); color: white; padding: 14px 18px;
+  border-radius: var(--radius-sm); font-size: 13.5px; font-weight: 500;
+  box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 10px;
+  animation: slideToast .3s cubic-bezier(.4,0,.2,1);
+  min-width: 260px; max-width: 380px;
+}
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+.toast.warning { background: var(--warning); }
+
+/* Empty state */
+.empty-state {
+  text-align: center; padding: 56px 24px;
+  color: var(--text-muted);
+}
+.empty-state i { font-size: 48px; color: var(--border); margin-bottom: 16px; display: block; }
+.empty-state h4 { font-size: 16px; font-weight: 700; color: var(--text-mid); margin-bottom: 6px; }
+.empty-state p { font-size: 13.5px; }
+
+/* Loading */
+.spinner { display: inline-block; width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,.4); border-top-color: white; border-radius: 50%; animation: spin .7s linear infinite; }
+.loading-overlay { position: absolute; inset: 0; background: rgba(255,255,255,.8); display: flex; align-items: center; justify-content: center; border-radius: inherit; z-index: 10; }
+
+/* ============================================================
+   VISTAS ESPECÍFICAS
+   ============================================================ */
+
+/* Dashboard */
+.activity-feed { display: flex; flex-direction: column; gap: 0; }
+.activity-item { display: flex; align-items: center; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--border); }
+.activity-item:last-child { border-bottom: none; }
+.act-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+.act-text { flex: 1; font-size: 13px; color: var(--text-mid); line-height: 1.5; }
+.act-text strong { color: var(--navy); }
+.act-time { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+/* Alertas panel */
+.alert-list { display: flex; flex-direction: column; gap: 8px; }
+.alert-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; border: 1.5px solid; }
+.alert-item.danger { background: var(--danger-bg); border-color: #fca5a5; }
+.alert-item.warning { background: var(--warning-bg); border-color: #fcd34d; }
+.alert-item i { font-size: 16px; flex-shrink: 0; }
+.alert-item .alert-text { flex: 1; font-size: 13px; font-weight: 500; }
+.alert-item .alert-val { font-size: 12px; font-family: 'DM Mono', monospace; font-weight: 700; }
+
+/* Config panel */
+.config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr)); gap: 16px; }
+.config-item {
+  background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  padding: 18px; display: flex; flex-direction: column; gap: 8px;
+  transition: border-color var(--trans);
+}
+.config-item:hover { border-color: var(--blue); }
+.config-item-icon { width: 40px; height: 40px; border-radius: 12px; background: var(--navy); color: white; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+.config-item h4 { font-size: 14px; font-weight: 700; color: var(--navy); }
+.config-item p { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+
+/* ============================================================
+   ANIMACIONES
+   ============================================================ */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideToast { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .topbar, .main { left: 0; margin-left: 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     PANTALLA DE LOGIN
+     ============================================================ -->
+<div id="loginScreen">
+  <div class="login-bg-pattern"></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon"><i class="fas fa-bolt"></i></div>
+      <div>
+        <h1>ERP CORE PRO</h1>
+        <span>Sistema Empresarial Integrado</span>
+      </div>
+    </div>
+    <h2 class="login-title">Bienvenido</h2>
+    <p class="login-sub">Ingresa tus credenciales para continuar</p>
+
+    <div class="form-group">
+      <label>Usuario</label>
+      <div class="input-wrap">
+        <i class="fas fa-user"></i>
+        <input id="loginUser" type="text" placeholder="Tu usuario" autocomplete="username"/>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <div class="input-wrap">
+        <i class="fas fa-lock"></i>
+        <input id="loginPass" type="password" placeholder="Tu contraseña" autocomplete="current-password"/>
+      </div>
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">
+      <span id="loginBtnText">Iniciar Sesión</span>
+    </button>
+    <div class="login-error" id="loginError">
+      <i class="fas fa-exclamation-circle"></i>
+      <span id="loginErrorMsg"></span>
+    </div>
+    <div class="login-version">ERP CORE PRO v2.0.0 · Powered by Google Sheets + Apps Script</div>
+  </div>
+</div>
+
+<!-- ============================================================
+     APP PRINCIPAL
+     ============================================================ -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon"><i class="fas fa-bolt"></i></div>
+      <div class="brand-text">
+        <h2>ERP CORE PRO</h2>
+        <span>v2.0.0</span>
+      </div>
+    </div>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="sidebarAvatar">A</div>
+      <div class="user-info">
+        <div class="name" id="sidebarName">Usuario</div>
+        <div class="role" id="sidebarRole">Rol</div>
+      </div>
+      <i class="fas fa-sign-out-alt user-logout" onclick="doLogout()" title="Cerrar sesión"></i>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebarNav">
+      <div class="nav-section">
+        <div class="nav-section-label">General</div>
+        <div class="nav-item active" data-view="dashboard" onclick="navigate('dashboard')">
+          <i class="fas fa-th-large"></i> Dashboard
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Operaciones</div>
+        <div class="nav-item" data-view="clientes" onclick="navigate('clientes')">
+          <i class="fas fa-users"></i> Clientes
+        </div>
+        <div class="nav-item" data-view="proveedores" onclick="navigate('proveedores')">
+          <i class="fas fa-truck"></i> Proveedores
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Recursos Humanos</div>
+        <div class="nav-item" data-view="empleados" onclick="navigate('empleados')">
+          <i class="fas fa-id-badge"></i> Empleados
+        </div>
+        <div class="nav-item" data-view="usuarios" onclick="navigate('usuarios')">
+          <i class="fas fa-user-lock"></i> Usuarios &amp; Accesos
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Logística</div>
+        <div class="nav-item" data-view="inventario" onclick="navigate('inventario')">
+          <i class="fas fa-boxes"></i> Inventario
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Configuración</div>
+        <div class="nav-item" data-view="empresa" onclick="navigate('empresa')">
+          <i class="fas fa-building"></i> Mi Empresa
+        </div>
+        <div class="nav-item" data-view="maestros" onclick="navigate('maestros')">
+          <i class="fas fa-sliders-h"></i> Tablas Maestras
+        </div>
+        <div class="nav-item" data-view="sistema" onclick="navigate('sistema')">
+          <i class="fas fa-cogs"></i> Sistema
+        </div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-version">ERP CORE PRO · Google Sheets</div>
+    </div>
+  </aside>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-title" id="topbarTitle">
+      Dashboard <span id="topbarSub"></span>
+    </div>
+    <div class="topbar-actions">
+      <button class="topbar-btn" id="alertBtn" onclick="navigate('inventario')" title="Alertas de stock">
+        <i class="fas fa-bell"></i>
+        <span class="badge" id="alertBadge" style="display:none">0</span>
+      </button>
+      <button class="topbar-btn" onclick="refreshView()" title="Actualizar">
+        <i class="fas fa-sync-alt" id="refreshIcon"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main" id="mainContent">
+    <!-- Vistas se renderizan aquí -->
+  </main>
+</div>
+
+<!-- MODAL GLOBAL -->
+<div class="overlay" id="modalOverlay" style="display:none" onclick="closeModalOnBg(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Título</h3>
+      <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toastContainer"></div>
+
+<!-- ============================================================
+     JAVASCRIPT - LÓGICA DE LA APP
+     ============================================================ -->
+<script>
+// ============================================================
+// CONFIGURACIÓN
+// ============================================================
+const APP = {
+  // ⚠️ REEMPLAZAR con la URL de tu Google Apps Script Web App
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzYoLL7nlwDKe0SGqhjY1PsktZxMo5DdK7PCPiK5QtejxipmOJblgVJSr-GtQfvBN3b/exec',
+  token: null,
+  sesion: null,
+  currentView: 'dashboard',
+  cache: {},
+};
+
+// ============================================================
+// API CLIENT — JSONP (evita CORS al abrir como archivo local)
+// ============================================================
+async function api(modulo, accion, datos = {}) {
+  return new Promise((resolve) => {
+    const cbName = '_erp_cb_' + Date.now();
+    const payload = encodeURIComponent(JSON.stringify({ modulo, accion, datos, token: APP.token }));
+    const url = `${APP.SCRIPT_URL}?callback=${cbName}&payload=${payload}`;
+
+    // Timeout de 15 segundos
+    const timer = setTimeout(() => {
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      resolve({ ok: false, mensaje: 'Tiempo de espera agotado (15s). Verifica la URL del script.' });
+    }, 15000);
+
+    window[cbName] = (data) => {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+      resolve(data);
+    };
+
+    const script = document.createElement('script');
+    script.src = url;
+    script.onerror = () => {
+      clearTimeout(timer);
+      delete window[cbName];
+      resolve({ ok: false, mensaje: 'No se pudo conectar con el servidor. Verifica la URL y los permisos de la Web App.' });
+    };
+    document.head.appendChild(script);
+  });
+}
+
+// Versión de demo (sin backend real) - simula respuestas
+async function apiDemo(modulo, accion, datos = {}) {
+  await new Promise(r => setTimeout(r, 350));
+  return DEMO_DATA[modulo]?.[accion]?.(datos) || { ok: false, mensaje: `${modulo}.${accion} no disponible en demo` };
+}
+
+// Detectar modo demo (URL no configurada)
+function isDemo() {
+  return false; // URL de producción configurada
+}
+const callApi = async (m, a, d) => isDemo() ? apiDemo(m, a, d) : api(m, a, d);
+
+// ============================================================
+// DATOS DE DEMO
+// ============================================================
+const DEMO_DATA = {
+  AUTH: {
+    login: (d) => {
+      if (d.username === 'admin' && d.password === 'Erp2024*') {
+        return { ok: true, datos: { token: 'demo-token-123', rol: 'Administrador', empleado: 'Administrador Demo' } };
+      }
+      return { ok: false, mensaje: 'Credenciales incorrectas' };
+    },
+    logout: () => ({ ok: true }),
+  },
+  DASHBOARD: {
+    indicadores: () => ({ ok: true, datos: {
+      OT_ACTIVAS: 14, OT_TOTAL: 87, OT_URGENTES: 3,
+      CLIENTES_ACTIVOS: 42, CLIENTES_TOTAL: 48,
+      EMPLEADOS_ACTIVOS: 18, PROVEEDORES: 11, ALERTAS_STOCK: 3,
+      FECHA_ACTUALIZACION: new Date().toLocaleDateString('es-CO'),
+    }}),
+  },
+  CLIENTES: {
+    listar: () => ({ ok: true, datos: [
+      { ID_CLIENTE:'CLI-001', NOMBRE:'Electro Industrial S.A.S', NIT_CEDULA:'900.123.456-1', TELEFONO:'3001234567', EMAIL:'info@electroind.com', CIUDAD:'Bogotá', TIPO_CLIENTE:'Empresa', ESTADO:'Activo' },
+      { ID_CLIENTE:'CLI-002', NOMBRE:'Construred Ltda', NIT_CEDULA:'800.987.654-3', TELEFONO:'3107654321', EMAIL:'compras@construred.com', CIUDAD:'Medellín', TIPO_CLIENTE:'Empresa', ESTADO:'Activo' },
+      { ID_CLIENTE:'CLI-003', NOMBRE:'Carlos Pérez', NIT_CEDULA:'1.098.765.432', TELEFONO:'3154567890', EMAIL:'cperez@gmail.com', CIUDAD:'Valledupar', TIPO_CLIENTE:'Natural', ESTADO:'Activo' },
+      { ID_CLIENTE:'CLI-004', NOMBRE:'Servicios Eléctricos del Norte', NIT_CEDULA:'901.234.567-2', TELEFONO:'5745556677', EMAIL:'admin@servnorte.co', CIUDAD:'Barranquilla', TIPO_CLIENTE:'Empresa', ESTADO:'Inactivo' },
+    ]}),
+    crear: (d) => ({ ok: true, datos: { id: 'CLI-00' + Math.floor(Math.random()*90+10) }, mensaje: 'Cliente creado en modo demo' }),
+    listarTipos: () => ({ ok: true, datos: [{ NOMBRE:'Empresa' }, { NOMBRE:'Natural' }, { NOMBRE:'Gobierno' }] }),
+  },
+  EMPLEADOS: {
+    listar: () => ({ ok: true, datos: [
+      { ID_EMPLEADO:'EMP-001', NOMBRE:'Juan Martínez', CEDULA:'10.234.567', CARGO:'Técnico Electricista', TELEFONO:'3001111111', EMAIL:'jmartinez@empresa.com', ESTADO:'Activo', SALARIO:'$2.800.000' },
+      { ID_EMPLEADO:'EMP-002', NOMBRE:'Laura Gómez', CEDULA:'52.987.654', CARGO:'Coordinadora', TELEFONO:'3102222222', EMAIL:'lgomez@empresa.com', ESTADO:'Activo', SALARIO:'$3.500.000' },
+      { ID_EMPLEADO:'EMP-003', NOMBRE:'Pedro Suárez', CEDULA:'79.123.456', CARGO:'Técnico Electricista', TELEFONO:'3153333333', EMAIL:'psuarez@empresa.com', ESTADO:'Vacaciones', SALARIO:'$2.800.000' },
+    ]}),
+    crear: (d) => ({ ok: true, datos: { id: 'EMP-00' + Math.floor(Math.random()*90+10) }, mensaje: 'Empleado creado' }),
+    listarCargos: () => ({ ok: true, datos: [{ NOMBRE:'Técnico Electricista' }, { NOMBRE:'Coordinador' }, { NOMBRE:'Administrador' }, { NOMBRE:'Auxiliar' }] }),
+  },
+  PROVEEDORES: {
+    listar: () => ({ ok: true, datos: [
+      { ID_PROVEEDOR:'PRV-001', NOMBRE:'Materiales Eléctricos Ltda', NIT:'900.111.222-3', TELEFONO:'3004445566', EMAIL:'ventas@matelec.com', CIUDAD:'Bogotá' },
+      { ID_PROVEEDOR:'PRV-002', NOMBRE:'Ferretería Industrial del Caribe', NIT:'800.333.444-1', TELEFONO:'5747778899', EMAIL:'pedidos@ferindcar.co', CIUDAD:'Barranquilla' },
+    ]}),
+    crear: (d) => ({ ok: true, datos: { id: 'PRV-00' + Math.floor(Math.random()*90+10) }, mensaje: 'Proveedor creado' }),
+  },
+  INVENTARIO: {
+    listar: () => ({ ok: true, datos: [
+      { ID_ITEM:'INV-001', NOMBRE:'Cable THW 12 AWG', CATEGORIA:'Conductores', UNIDAD_MEDIDA:'Metro', CANTIDAD:850, STOCK_MINIMO:200, PRECIO_UNITARIO:'$1.200', BODEGA:'Principal', ESTADO:'Activo' },
+      { ID_ITEM:'INV-002', NOMBRE:'Breaker 20A 2P', CATEGORIA:'Protecciones', UNIDAD_MEDIDA:'Und', CANTIDAD:45, STOCK_MINIMO:20, PRECIO_UNITARIO:'$35.000', BODEGA:'Principal', ESTADO:'Activo' },
+      { ID_ITEM:'INV-003', NOMBRE:'Tubería conduit 1/2"', CATEGORIA:'Tubería', UNIDAD_MEDIDA:'Tramo', CANTIDAD:12, STOCK_MINIMO:30, PRECIO_UNITARIO:'$8.500', BODEGA:'Bodega 2', ESTADO:'Activo' },
+      { ID_ITEM:'INV-004', NOMBRE:'Toma corriente doble', CATEGORIA:'Accesorios', UNIDAD_MEDIDA:'Und', CANTIDAD:8, STOCK_MINIMO:50, PRECIO_UNITARIO:'$12.000', BODEGA:'Principal', ESTADO:'Activo' },
+    ]}),
+    crear: (d) => ({ ok: true, datos: { id: 'INV-00' + Math.floor(Math.random()*90+10) }, mensaje: 'Item creado' }),
+    alertasStock: () => ({ ok: true, datos: [
+      { ID_ITEM:'INV-003', NOMBRE:'Tubería conduit 1/2"', CANTIDAD:12, STOCK_MINIMO:30 },
+      { ID_ITEM:'INV-004', NOMBRE:'Toma corriente doble', CANTIDAD:8, STOCK_MINIMO:50 },
+      { ID_ITEM:'INV-005', NOMBRE:'Cinta aislante 3M', CANTIDAD:5, STOCK_MINIMO:20 },
+    ]}),
+    listarBodegas: () => ({ ok: true, datos: [{ NOMBRE:'Principal' }, { NOMBRE:'Bodega 2' }, { NOMBRE:'Taller' }] }),
+    listarCategorias: () => ({ ok: true, datos: [{ NOMBRE:'Conductores' }, { NOMBRE:'Protecciones' }, { NOMBRE:'Tubería' }, { NOMBRE:'Accesorios' }] }),
+  },
+  USUARIOS: {
+    listar: () => ({ ok: true, datos: [
+      { ID_USUARIO:'USR-001', USERNAME:'admin', EMPLEADO:'Administrador Demo', ROL:'Administrador', ACTIVO:true, ULTIMO_ACCESO: new Date().toLocaleDateString() },
+      { ID_USUARIO:'USR-002', USERNAME:'lgomez', EMPLEADO:'Laura Gómez', ROL:'Coordinador', ACTIVO:true, ULTIMO_ACCESO:'01/06/2025' },
+      { ID_USUARIO:'USR-003', USERNAME:'jmartinez', EMPLEADO:'Juan Martínez', ROL:'Técnico', ACTIVO:true, ULTIMO_ACCESO:'03/06/2025' },
+    ]}),
+    crear: (d) => ({ ok: true, datos: { id: 'USR-00' + Math.floor(Math.random()*90+10) }, mensaje: 'Usuario creado. Contraseña: Erp2024*' }),
+    listarRoles: () => ({ ok: true, datos: [{ NOMBRE:'Administrador' }, { NOMBRE:'Coordinador' }, { NOMBRE:'Técnico' }] }),
+  },
+  EMPRESA: {
+    obtener: () => ({ ok: true, datos: { ID_EMPRESA:'EMP-001', NOMBRE:'Mi Empresa Eléctrica Pro', NIT:'900.000.000-1', DIRECCION:'Calle Principal #45-67', TELEFONO:'3001234567', EMAIL:'gerencia@empresa.com' } }),
+    actualizar: (d) => ({ ok: true, mensaje: 'Empresa actualizada' }),
+  },
+  SISTEMA: {
+    inicializar: () => ({ ok: true, mensaje: 'Sistema inicializado correctamente' }),
+    formatear: () => ({ ok: true, mensaje: '12 hojas formateadas correctamente' }),
+  },
+};
+
+// ============================================================
+// AUTENTICACIÓN
+// ============================================================
+async function doLogin() {
+  const user = document.getElementById('loginUser').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const btn = document.getElementById('loginBtn');
+  const errDiv = document.getElementById('loginError');
+  if (!user || !pass) { showLoginError('Ingresa usuario y contraseña'); return; }
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+  errDiv.style.display = 'none';
+  const res = await callApi('AUTH', 'login', { username: user, password: pass });
+  btn.innerHTML = '<span>Iniciar Sesión</span>';
+  btn.disabled = false;
+  if (!res.ok) { showLoginError(res.mensaje); return; }
+  APP.token = res.datos.token;
+  APP.sesion = res.datos;
+  initApp();
+}
+
+function showLoginError(msg) {
+  const errDiv = document.getElementById('loginError');
+  document.getElementById('loginErrorMsg').textContent = msg;
+  errDiv.style.display = 'flex';
+}
+
+async function doLogout() {
+  await callApi('AUTH', 'logout', { token: APP.token });
+  APP.token = null; APP.sesion = null; APP.cache = {};
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+}
+
+// Enter en login
+document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+function initApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  const nombre = APP.sesion.empleado || APP.sesion.username || 'Usuario';
+  document.getElementById('sidebarName').textContent = nombre;
+  document.getElementById('sidebarRole').textContent = APP.sesion.rol || '';
+  document.getElementById('sidebarAvatar').textContent = nombre.charAt(0).toUpperCase();
+  navigate('dashboard');
+  loadAlertBadge();
+}
+
+async function loadAlertBadge() {
+  const res = await callApi('INVENTARIO', 'alertasStock', {});
+  if (res.ok && res.datos.length > 0) {
+    const badge = document.getElementById('alertBadge');
+    badge.textContent = res.datos.length;
+    badge.style.display = 'flex';
+  }
+}
+
+// ============================================================
+// NAVEGACIÓN
+// ============================================================
+const VIEW_TITLES = {
+  dashboard: 'Dashboard', clientes: 'Clientes', empleados: 'Empleados',
+  proveedores: 'Proveedores', inventario: 'Inventario', usuarios: 'Usuarios & Accesos',
+  empresa: 'Mi Empresa', maestros: 'Tablas Maestras', sistema: 'Sistema',
+};
+
+function navigate(view) {
+  APP.currentView = view;
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  const active = document.querySelector(`[data-view="${view}"]`);
+  if (active) active.classList.add('active');
+  document.getElementById('topbarTitle').innerHTML = `${VIEW_TITLES[view] || view}`;
+  const views = { dashboard, clientes, empleados, proveedores, inventario, usuarios, empresa, maestros, sistema };
+  if (views[view]) views[view]();
+  else mainContent(`<div class="empty-state"><i class="fas fa-wrench"></i><h4>Vista en construcción</h4><p>Próximamente disponible</p></div>`);
+}
+
+function refreshView() {
+  const icon = document.getElementById('refreshIcon');
+  icon.style.animation = 'spin .7s linear infinite';
+  setTimeout(() => { icon.style.animation = ''; }, 700);
+  APP.cache = {};
+  navigate(APP.currentView);
+}
+
+function mainContent(html) {
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+// ============================================================
+// VISTA: DASHBOARD
+// ============================================================
+async function dashboard() {
+  mainContent(`<div style="display:flex;align-items:center;gap:10px;color:var(--text-muted);padding:60px;justify-content:center"><span class="spinner" style="border-color:rgba(15,31,92,.2);border-top-color:var(--navy)"></span> Cargando indicadores…</div>`);
+  const res = await callApi('DASHBOARD', 'indicadores', {});
+  if (!res.ok) { mainContent(`<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h4>Error</h4><p>${res.mensaje}</p></div>`); return; }
+  const d = res.datos;
+
+  mainContent(`
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="fas fa-bolt"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">${d.OT_ACTIVAS ?? 0}</div>
+        <div class="stat-label">Órdenes de Trabajo Activas</div>
+        <div class="stat-trend up"><i class="fas fa-arrow-up"></i> ${d.OT_URGENTES ?? 0} urgentes</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon success"><i class="fas fa-users"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">${d.CLIENTES_ACTIVOS ?? 0}</div>
+        <div class="stat-label">Clientes Activos</div>
+        <div class="stat-trend up"><i class="fas fa-database"></i> ${d.CLIENTES_TOTAL ?? 0} total</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon navy"><i class="fas fa-id-badge"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">${d.EMPLEADOS_ACTIVOS ?? 0}</div>
+        <div class="stat-label">Empleados Activos</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon ${d.ALERTAS_STOCK > 0 ? 'danger' : 'success'}"><i class="fas fa-boxes"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">${d.ALERTAS_STOCK ?? 0}</div>
+        <div class="stat-label">Alertas de Stock Mínimo</div>
+        ${d.ALERTAS_STOCK > 0 ? '<div class="stat-trend down"><i class="fas fa-exclamation-triangle"></i> Requiere atención</div>' : '<div class="stat-trend up"><i class="fas fa-check-circle"></i> Todo en orden</div>'}
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon warning"><i class="fas fa-truck"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">${d.PROVEEDORES ?? 0}</div>
+        <div class="stat-label">Proveedores Registrados</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 340px;gap:20px">
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fas fa-chart-line" style="color:var(--blue);margin-right:8px"></i>Actividad Reciente</h3>
+        <span style="font-size:11px;color:var(--text-muted)">Actualizado: ${d.FECHA_ACTUALIZACION}</span>
+      </div>
+      <div class="card-body">
+        <div class="activity-feed">
+          ${[
+            ['blue','fas fa-bolt','OT-0087 cerrada exitosamente','Cliente: Electro Industrial','Hace 2h'],
+            ['success','fas fa-user-plus','Nuevo cliente registrado','Construred Ltda - Medellín','Hace 4h'],
+            ['warning','fas fa-boxes','Stock bajo detectado','Tubería conduit 1/2" → 12 uds','Hace 5h'],
+            ['navy','fas fa-wrench','OT-0085 asignada a técnico','Juan Martínez','Ayer'],
+            ['success','fas fa-shopping-cart','Orden de compra aprobada','PRV-002 - $1.250.000','Ayer'],
+          ].map(([color, icon, title, sub, time]) => `
+            <div class="activity-item">
+              <div class="act-icon" style="background:var(--${color === 'blue' ? 'info' : color}-bg || rgba(15,31,92,.08));color:var(--${color})">
+                <i class="${icon}"></i>
+              </div>
+              <div class="act-text"><strong>${title}</strong><br/>${sub}</div>
+              <div class="act-time">${time}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3><i class="fas fa-exclamation-triangle" style="color:var(--warning);margin-right:8px"></i>Alertas</h3>
+      </div>
+      <div class="card-body" style="padding:14px 16px">
+        <div class="alert-list">
+          ${d.ALERTAS_STOCK > 0 ? `
+          <div class="alert-item warning">
+            <i class="fas fa-boxes" style="color:var(--warning)"></i>
+            <div class="alert-text">Stock mínimo</div>
+            <div class="alert-val" style="color:var(--warning)">${d.ALERTAS_STOCK} ítems</div>
+          </div>` : ''}
+          ${d.OT_URGENTES > 0 ? `
+          <div class="alert-item danger">
+            <i class="fas fa-bolt" style="color:var(--danger)"></i>
+            <div class="alert-text">OT Urgentes pendientes</div>
+            <div class="alert-val" style="color:var(--danger)">${d.OT_URGENTES}</div>
+          </div>` : ''}
+          <div class="alert-item" style="background:var(--success-bg);border-color:#86efac">
+            <i class="fas fa-check-circle" style="color:var(--success)"></i>
+            <div class="alert-text" style="color:var(--success)">Sistema operativo</div>
+            <div class="alert-val" style="color:var(--success)">OK</div>
+          </div>
+        </div>
+
+        <div style="margin-top:18px;border-top:1px solid var(--border);padding-top:14px">
+          <div style="font-size:12px;font-weight:700;color:var(--navy);margin-bottom:10px">Accesos rápidos</div>
+          ${[
+            ['clientes','fas fa-users','Clientes','blue'],
+            ['inventario','fas fa-boxes','Inventario','warning'],
+            ['empleados','fas fa-id-badge','Empleados','navy'],
+          ].map(([view, icon, label, color]) => `
+            <div onclick="navigate('${view}')" style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;transition:background .2s;margin-bottom:4px" onmouseover="this.style.background='var(--bg2)'" onmouseout="this.style.background=''">
+              <i class="${icon}" style="color:var(--${color});width:16px;text-align:center"></i>
+              <span style="font-size:13px;font-weight:500;color:var(--text-mid)">${label}</span>
+              <i class="fas fa-chevron-right" style="margin-left:auto;color:var(--border);font-size:11px"></i>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  </div>`);
+}
+
+// ============================================================
+// VISTA: CLIENTES
+// ============================================================
+async function clientes() {
+  mainContent(`<div style="padding:60px;text-align:center;color:var(--text-muted)"><span class="spinner" style="border-color:rgba(15,31,92,.2);border-top-color:var(--navy)"></span></div>`);
+  const res = await callApi('CLIENTES', 'listar', {});
+  const lista = res.ok ? res.datos : [];
+
+  mainContent(`
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-users" style="color:var(--blue);margin-right:8px"></i>Clientes <span style="font-size:13px;font-weight:400;color:var(--text-muted);margin-left:4px">(${lista.length})</span></h3>
+      <button class="btn btn-primary btn-sm" onclick="modalNuevoCliente()"><i class="fas fa-plus"></i> Nuevo Cliente</button>
+    </div>
+    <div class="card-body" style="padding:16px 20px">
+      <div class="toolbar">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" placeholder="Buscar por nombre, NIT, ciudad…" oninput="filtrarTabla(this,'tablaClientes')" />
+        </div>
+        <select class="filter-sel" onchange="filtrarTabla(this,'tablaClientes',2)">
+          <option value="">Todos los tipos</option>
+          <option>Empresa</option><option>Natural</option><option>Gobierno</option>
+        </select>
+        <select class="filter-sel" onchange="filtrarTabla(this,'tablaClientes',7)">
+          <option value="">Todos los estados</option>
+          <option>Activo</option><option>Inactivo</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table id="tablaClientes">
+          <thead><tr>
+            <th>ID</th><th>Nombre</th><th>NIT / Cédula</th>
+            <th>Teléfono</th><th>Ciudad</th><th>Tipo</th><th>Email</th><th>Estado</th><th>Acciones</th>
+          </tr></thead>
+          <tbody>
+            ${lista.length === 0 ? `<tr><td colspan="9"><div class="empty-state"><i class="fas fa-users"></i><h4>Sin clientes</h4><p>Agrega tu primer cliente</p></div></td></tr>` :
+            lista.map(c => `
+              <tr>
+                <td class="td-mono">${c.ID_CLIENTE}</td>
+                <td><strong>${c.NOMBRE}</strong></td>
+                <td class="td-mono">${c.NIT_CEDULA}</td>
+                <td>${c.TELEFONO}</td>
+                <td>${c.CIUDAD}</td>
+                <td><span class="pill pill-navy">${c.TIPO_CLIENTE}</span></td>
+                <td style="font-size:12px">${c.EMAIL}</td>
+                <td><span class="pill pill-dot ${c.ESTADO==='Activo'?'pill-success':'pill-danger'}">${c.ESTADO}</span></td>
+                <td>
+                  <div style="display:flex;gap:4px">
+                    <button class="btn btn-secondary btn-sm btn-icon" title="Editar" onclick="modalEditarCliente(${JSON.stringify(c).replace(/"/g,'&quot;')})"><i class="fas fa-pen"></i></button>
+                  </div>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`);
+}
+
+function modalNuevoCliente() {
+  openModal('Nuevo Cliente', `
+    <div class="form-grid">
+      <div class="f-group full"><label>Nombre *</label><input id="fn" type="text" placeholder="Nombre completo o razón social"/></div>
+      <div class="f-group"><label>NIT / Cédula *</label><input id="fnit" type="text" placeholder="900.000.000-0"/></div>
+      <div class="f-group"><label>Tipo de Cliente *</label>
+        <select id="ftipo"><option>Empresa</option><option>Natural</option><option>Gobierno</option></select>
+      </div>
+      <div class="f-group"><label>Teléfono</label><input id="ftel" type="text" placeholder="300 000 0000"/></div>
+      <div class="f-group"><label>Email</label><input id="femail" type="email" placeholder="correo@empresa.com"/></div>
+      <div class="f-group"><label>Ciudad</label><input id="fciudad" type="text" placeholder="Ciudad"/></div>
+      <div class="f-group full"><label>Dirección</label><input id="fdir" type="text" placeholder="Calle, carrera, número"/></div>
+    </div>`,
+    [{label:'Cancelar', cls:'btn-secondary', action:'closeModal()'},
+     {label:'Guardar Cliente', cls:'btn-primary', action:'guardarCliente()'}]);
+}
+
+async function guardarCliente() {
+  const datos = {
+    NOMBRE: v('fn'), NIT_CEDULA: v('fnit'), TIPO_CLIENTE: v('ftipo'),
+    TELEFONO: v('ftel'), EMAIL: v('femail'), CIUDAD: v('fciudad'), DIRECCION: v('fdir'), ESTADO: 'Activo',
+  };
+  if (!datos.NOMBRE || !datos.NIT_CEDULA) { toast('Nombre y NIT son obligatorios', 'warning'); return; }
+  const res = await callApi('CLIENTES', 'crear', datos);
+  if (res.ok) { toast(`Cliente creado: ${res.datos?.id}`, 'success'); closeModal(); clientes(); }
+  else toast(res.mensaje, 'error');
+}
+
+function modalEditarCliente(c) {
+  openModal('Editar Cliente', `
+    <div class="form-grid">
+      <div class="f-group full"><label>Nombre *</label><input id="fn" value="${c.NOMBRE}"/></div>
+      <div class="f-group"><label>NIT / Cédula</label><input id="fnit" value="${c.NIT_CEDULA}" readonly style="background:var(--bg);color:var(--text-muted)"/></div>
+      <div class="f-group"><label>Tipo</label>
+        <select id="ftipo"><option ${c.TIPO_CLIENTE==='Empresa'?'selected':''}>Empresa</option><option ${c.TIPO_CLIENTE==='Natural'?'selected':''}>Natural</option><option ${c.TIPO_CLIENTE==='Gobierno'?'selected':''}>Gobierno</option></select>
+      </div>
+      <div class="f-group"><label>Teléfono</label><input id="ftel" value="${c.TELEFONO}"/></div>
+      <div class="f-group"><label>Email</label><input id="femail" value="${c.EMAIL}"/></div>
+      <div class="f-group"><label>Ciudad</label><input id="fciudad" value="${c.CIUDAD}"/></div>
+    </div>`,
+    [{label:'Cancelar', cls:'btn-secondary', action:'closeModal()'},
+     {label:'Actualizar', cls:'btn-primary', action:`actualizarCliente('${c.ID_CLIENTE}')`}]);
+}
+
+async function actualizarCliente(id) {
+  const datos = { ID_CLIENTE: id, NOMBRE: v('fn'), TIPO_CLIENTE: v('ftipo'), TELEFONO: v('ftel'), EMAIL: v('femail'), CIUDAD: v('fciudad') };
+  const res = await callApi('CLIENTES', 'actualizar', datos);
+  if (res.ok) { toast('Cliente actualizado', 'success'); closeModal(); clientes(); }
+  else toast(res.mensaje, 'error');
+}
+
+// ============================================================
+// VISTA: EMPLEADOS
+// ============================================================
+async function empleados() {
+  mainContent(`<div style="padding:60px;text-align:center;color:var(--text-muted)"><span class="spinner" style="border-color:rgba(15,31,92,.2);border-top-color:var(--navy)"></span></div>`);
+  const res = await callApi('EMPLEADOS', 'listar', {});
+  const lista = res.ok ? res.datos : [];
+  const estadoColor = { Activo:'success', Inactivo:'danger', Vacaciones:'warning', Incapacidad:'info' };
+
+  mainContent(`
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-id-badge" style="color:var(--blue);margin-right:8px"></i>Empleados <span style="font-size:13px;font-weight:400;color:var(--text-muted)">(${lista.length})</span></h3>
+      <button class="btn btn-primary btn-sm" onclick="modalNuevoEmpleado()"><i class="fas fa-plus"></i> Nuevo Empleado</button>
+    </div>
+    <div class="card-body" style="padding:16px 20px">
+      <div class="toolbar">
+        <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Buscar empleado…" oninput="filtrarTabla(this,'tablaEmpleados')"/></div>
+        <select class="filter-sel" onchange="filtrarTabla(this,'tablaEmpleados',5)">
+          <option value="">Todos los estados</option><option>Activo</option><option>Inactivo</option><option>Vacaciones</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table id="tablaEmpleados">
+          <thead><tr><th>ID</th><th>Nombre</th><th>Cédula</th><th>Cargo</th><th>Teléfono</th><th>Estado</th><th>Salario</th><th>Acciones</th></tr></thead>
+          <tbody>
+            ${lista.length === 0 ? `<tr><td colspan="8"><div class="empty-state"><i class="fas fa-id-badge"></i><h4>Sin empleados</h4></div></td></tr>` :
+            lista.map(e => `
+              <tr>
+                <td class="td-mono">${e.ID_EMPLEADO}</td>
+                <td><strong>${e.NOMBRE}</strong></td>
+                <td class="td-mono">${e.CEDULA}</td>
+                <td>${e.CARGO}</td>
+                <td>${e.TELEFONO}</td>
+                <td><span class="pill pill-dot pill-${estadoColor[e.ESTADO]||'navy'}">${e.ESTADO}</span></td>
+                <td style="font-family:'DM Mono',monospace;font-size:12.5px">${e.SALARIO}</td>
+                <td><button class="btn btn-secondary btn-sm btn-icon" onclick="modalEditarEmpleado(${JSON.stringify(e).replace(/"/g,'&quot;')})"><i class="fas fa-pen"></i></button></td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`);
+}
+
+function modalNuevoEmpleado() {
+  openModal('Nuevo Empleado', `
+    <div class="form-grid">
+      <div class="f-group full"><label>Nombre completo *</label><input id="fen" type="text"/></div>
+      <div class="f-group"><label>Cédula *</label><input id="fec" type="text"/></div>
+      <div class="f-group"><label>Cargo *</label><input id="fecargo" type="text" placeholder="Técnico, Coordinador…"/></div>
+      <div class="f-group"><label>Teléfono</label><input id="fetel" type="text"/></div>
+      <div class="f-group"><label>Email</label><input id="feemail" type="email"/></div>
+      <div class="f-group"><label>Salario</label><input id="fesal" type="text" placeholder="$2.800.000"/></div>
+    </div>`,
+    [{label:'Cancelar', cls:'btn-secondary', action:'closeModal()'},
+     {label:'Guardar', cls:'btn-primary', action:'guardarEmpleado()'}]);
+}
+
+async function guardarEmpleado() {
+  const datos = { NOMBRE:v('fen'), CEDULA:v('fec'), CARGO:v('fecargo'), TELEFONO:v('fetel'), EMAIL:v('feemail'), SALARIO:v('fesal') };
+  if (!datos.NOMBRE || !datos.CEDULA) { toast('Nombre y cédula obligatorios', 'warning'); return; }
+  const res = await callApi('EMPLEADOS', 'crear', datos);
+  if (res.ok) { toast(`Empleado creado: ${res.datos?.id}`, 'success'); closeModal(); empleados(); }
+  else toast(res.mensaje, 'error');
+}
+
+function modalEditarEmpleado(e) {
+  openModal('Editar Empleado', `
+    <div class="form-grid">
+      <div class="f-group full"><label>Nombre</label><input id="fen" value="${e.NOMBRE}"/></div>
+      <div class="f-group"><label>Cédula</label><input id="fec" value="${e.CEDULA}" readonly style="background:var(--bg)"/></div>
+      <div class="f-group"><label>Cargo</label><input id="fecargo" value="${e.CARGO}"/></div>
+      <div class="f-group"><label>Teléfono</label><input id="fetel" value="${e.TELEFONO}"/></div>
+      <div class="f-group"><label>Salario</label><input id="fesal" value="${e.SALARIO}"/></div>
+      <div class="f-group"><label>Estado</label>
+        <select id="feest"><option ${e.ESTADO==='Activo'?'selected':''}>Activo</option><option ${e.ESTADO==='Inactivo'?'selected':''}>Inactivo</option><option ${e.ESTADO==='Vacaciones'?'selected':''}>Vacaciones</option><option ${e.ESTADO==='Incapacidad'?'selected':''}>Incapacidad</option></select>
+      </div>
+    </div>`,
+    [{label:'Cancelar', cls:'btn-secondary', action:'closeModal()'},
+     {label:'Actualizar', cls:'btn-primary', action:`actualizarEmpleadoFn('${e.ID_EMPLEADO}')`}]);
+}
+
+async function actualizarEmpleadoFn(id) {
+  const datos = { ID_EMPLEADO:id, NOMBRE:v('fen'), CARGO:v('fecargo'), TELEFONO:v('fetel'), SALARIO:v('fesal'), ESTADO:v('feest') };
+  const res = await callApi('EMPLEADOS', 'actualizar', datos);
+  if (res.ok) { toast('Empleado actualizado', 'success'); closeModal(); empleados(); }
+  else toast(res.mensaje, 'error');
+}
+
+// ============================================================
+// VISTA: PROVEEDORES
+// ============================================================
+async function proveedores() {
+  const res = await callApi('PROVEEDORES', 'listar', {});
+  const lista = res.ok ? res.datos : [];
+  mainContent(`
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-truck" style="color:var(--blue);margin-right:8px"></i>Proveedores <span style="font-size:13px;font-weight:400;color:var(--text-muted)">(${lista.length})</span></h3>
+      <button class="btn btn-primary btn-sm" onclick="modalNuevoProveedor()"><i class="fas fa-plus"></i> Nuevo Proveedor</button>
+    </div>
+    <div class="card-body" style="padding:16px 20px">
+      <div class="toolbar"><div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Buscar proveedor…" oninput="filtrarTabla(this,'tablaProveedores')"/></div></div>
+      <div class="table-wrap">
+        <table id="tablaProveedores">
+          <thead><tr><th>ID</th><th>Nombre</th><th>NIT</th><th>Teléfono</th><th>Ciudad</th><th>Email</th><th>Acciones</th></tr></thead>
+          <tbody>
+            ${lista.length === 0 ? `<tr><td colspan="7"><div class="empty-state"><i class="fas fa-truck"></i><h4>Sin proveedores</h4></div></td></tr>` :
+            lista.map(p => `
+              <tr>
+                <td class="td-mono">${p.ID_PROVEEDOR}</td>
+                <td><strong>${p.NOMBRE}</strong></td>
+                <td class="td-mono">${p.NIT}</td>
+                <td>${p.TELEFONO}</td>
+                <td>${p.CIUDAD}</td>
+                <td style="font-size:12px">${p.EMAIL}</td>
+                <td><button class="btn btn-secondary btn-sm btn-icon"><i class="fas fa-pen"></i></button></td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`);
+}
+
+function modalNuevoProveedor() {
+  openModal('Nuevo Proveedor', `
+    <div class="form-grid">
+      <div class="f-group full"><label>Nombre / Razón Social *</label><input id="pvn" type="text"/></div>
+      <div class="f-group"><label>NIT *</label><input id="pvnit" type="text"/></div>
+      <div class="f-group"><label>Ciudad</label><input id="pvciu" type="text"/></div>
+      <div class="f-group"><label>Teléfono</label><input id="pvtel" type="text"/></div>
+      <div class="f-group full"><label>Email</label><input id="pvemail" type="email"/></div>
+      <div class="f-group full"><label>Dirección</label><input id="pvdir" type="text"/></div>
+    </div>`,
+    [{label:'Cancelar', cls:'btn-secondary', action:'closeModal()'},
+     {label:'Guardar', cls:'btn-primary', action:'guardarProveedor()'}]);
+}
+
+async function guardarProveedor() {
+  const datos = { NOMBRE:v('pvn'), NIT:v('pvnit'), CIUDAD:v('pvciu'), TELEFONO:v('pvtel'), EMAIL:v('pvemail'), DIRECCION:v('pvdir') };
+  if (!datos.NOMBRE || !datos.NIT) { toast('Nombre y NIT obligatorios','warning'); return; }
+  const res = await callApi('PROVEEDORES', 'crear', datos);
+  if (res.ok) { toast(`Proveedor creado: ${res.datos?.id}`,'success'); closeModal(); proveedores(); }
+  else toast(res.mensaje,'error');
+}
+
+// ============================================================
+// VISTA: INVENTARIO
+// ============================================================
+async function inventario() {
+  const [resInv, resAlertas] = await Promise.all([
+    callApi('INVENTARIO', 'listar', {}),
+    callApi('INVENTARIO', 'alertasStock', {}),
+  ]);
+  const lista = resInv.ok ? resInv.datos : [];
+  const alertas = resAlertas.ok ? resAlertas.datos : [];
+
+  mainContent(`
+  ${alertas.length > 0 ? `
+  <div class="card" style="margin-bottom:18px;border-color:#fcd34d">
+    <div class="card-header" style="background:var(--warning-bg)">
+      <h3 style="color:var(--warning)"><i class="fas fa-exclamation-triangle" style="margin-right:8px"></i>⚠️ ${alertas.length} ítems con stock bajo</h3>
+    </div>
+    <div class="card-body" style="padding:12px 16px">
+      <div class="alert-list">
+        ${alertas.slice(0,5).map(a => `
+          <div class="alert-item warning">
+            <i class="fas fa-box" style="color:var(--warning)"></i>
+            <div class="alert-text">${a.NOMBRE}</div>
+            <div class="alert-val" style="color:var(--warning)">${a.CANTIDAD} / mín ${a.STOCK_MINIMO}</div>
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>` : ''}
+
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-boxes" style="color:var(--blue);margin-right:8px"></i>Inventario <span style="font-size:13px;font-weight:400;color:var(--text-muted)">(${lista.length} ítems)</span></h3>
+      <button class="btn btn-primary btn-sm" onclick="modalNuevoItem()"><i class="fas fa-plus"></i> Nuevo Ítem</button>
+    </div>
+    <div class="card-body" style="padding:16px 20px">
+      <div class="toolbar">
+        <div class="search-box"><i class="fas fa-search"></i><input type="text" placeholder="Buscar ítem, categoría, bodega…" oninput="filtrarTabla(this,'tablaInv')"/></div>
+        <select class="filter-sel" onchange="filtrarTabla(this,'tablaInv',3)">
+          <option value="">Todas las categorías</option>
+          <option>Conductores</option><option>Protecciones</option><option>Tubería</option><option>Accesorios</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table id="tablaInv">
+          <thead><tr><th>ID</th><th>Ítem</th><th>Categoría</th><th>Bodega</th><th>Unidad</th><th>Stock</th><th>Mín.</th><th>Precio Unit.</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody>
+            ${lista.map(i => {
+              const bajo = parseFloat(i.CANTIDAD) <= parseFloat(i.STOCK_MINIMO);
+              return `<tr ${bajo ? 'style="background:#fff7ed"' : ''}>
+                <td class="td-mono">${i.ID_ITEM}</td>
+                <td><strong>${i.NOMBRE}</strong></td>
+                <td>${i.CATEGORIA}</td>
+                <td>${i.BODEGA}</td>
+                <td style="font-size:12px;color:var(--text-muted)">${i.UNIDAD_MEDIDA}</td>
+                <td><span style="font-family:'DM Mono',monospace;font-weight:700;color:${bajo?'var(--danger)':'var(--success)'}">${i.CANTIDAD}</span></td>
+                <td style="font-family:'DM Mono',monospace;font-size:12px;color:var(--text-muted)">${i.STOCK_MINIMO}</td>
+                <td style="font-family:'DM Mono',monospace;font-size:12.5px">${i.PRECIO_UNITARIO}</td>
+                <td><span class="pill pill-dot ${bajo?'pill-danger':'pill-success'}">${bajo?'Bajo':'OK'}</span></td>
+                <td>
+                  <div style="display:flex;gap:4px">
+                    <button class="btn btn-secondary btn-sm btn-icon" title="Ajustar stock" onclick="modalAjusteStock('${i.ID_ITEM}','${i.NOMBRE}',${i.CANTIDAD})"><i class="fas fa-sort-amount-up"></i></button>
+                  </div>
+                </td>
+              </tr>`;
+            }).join('') || `<tr><td colspan="10"><div class="empty-state"><i class="fas fa-boxes"></i><h4>Sin ítems</h4></div></td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`);
+}
+
+function modalAjusteStock(id, nombre, stockActual) {
+  openModal(`Ajustar Stock: ${nombre}`, `
+    <div style="background:var(--bg2);border-radius:10px;padding:14px 16px;margin-bottom:18px">
+      <div style="font-size:12px;color:var(--text-muted)">Stock actual</div>
+      <div style="font-size:28px;font-weight:800;color:var(--navy);font-family:'DM Mono',monospace">${stockActual}</div>
+    </div>
+    <div class="form-grid">
+      <div class="f-group"><label>Tipo de movimiento</label>
+        <select id="ajTipo"><option value="ENTRADA">📥 Entrada (suma)</option><option value="SALIDA">📤 Salida (resta)</option></select>
+      </div>
+      <div class="f-group"><label>Cantidad *</label><input id="ajCant" type="number" min="1" placeholder="0"/></div>
+      <div class="f-group full"><label>Motivo</label><input id="ajMotivo" type="text" placeholder="Compra, uso en OT, ajuste…"/></div>
+    </div>`,
+    [{label:'Cancelar', cls:'btn-secondary', action:'closeModal()'},
+     {label:'Aplicar', cls:'btn-primary', action:`aplicarAjusteStock('${id}')`}]);
+}
+
+async function aplicarAjusteStock(id) {
+  const datos = { idItem:id, cantidad:v('ajCant'), tipo:v('ajTipo'), motivo:v('ajMotivo') };
+  if (!datos.cantidad || parseFloat(datos.cantidad) <= 0) { toast('Ingresa una cantidad válida','warning'); return; }
+  const res = await callApi('INVENTARIO', 'ajustarStock', datos);
+  if (res.ok) { toast(`Stock ajustado. Nuevo: ${res.datos?.stockNuevo ?? ''}`, 'success'); closeModal(); inventario(); }
+  else toast(res.mensaje, 'error');
+}
+
+function modalNuevoItem() {
+  openModal('Nuevo Ítem de Inventario', `
+    <div class="form-grid">
+      <div class="f-group full"><label>Nombre *</label><input id="inn" type="text"/></div>
+      <div class="f-group"><label>Categoría *</label>
+        <select id="incat"><option>Conductores</option><option>Protecciones</option><option>Tubería</option><option>Accesorios</option><option>Otros</option></select>
+      </div>
+      <div class="f-group"><label>Bodega</label><input id="inbod" type="text" value="Principal"/></div>
+      <div class="f-group"><label>Unidad de medida</label><input id="inun" type="text" placeholder="Metro, Und, Kg…"/></div>
+      <div class="f-group"><label>Cantidad inicial</label><input id="incant" type="number" value="0"/></div>
+      <div class="f-group"><label>Stock mínimo</label><input id="inmin" type="number" value="0"/></div>
+      <div class="f-group full"><label>Precio unitario</label><input id="inprecio" type="text" placeholder="$0"/></div>
+    </div>`,
+    [{label:'Cancelar', cls:'btn-secondary', action:'closeModal()'},
+     {label:'Guardar', cls:'btn-primary', action:'guardarItem()'}]);
+}
+
+async function guardarItem() {
+  const datos = { NOMBRE:v('inn'), CATEGORIA:v('incat'), BODEGA:v('inbod'), UNIDAD_MEDIDA:v('inun'), CANTIDAD:v('incant'), STOCK_MINIMO:v('inmin'), PRECIO_UNITARIO:v('inprecio') };
+  if (!datos.NOMBRE) { toast('El nombre es obligatorio','warning'); return; }
+  const res = await callApi('INVENTARIO', 'crear', datos);
+  if (res.ok) { toast(`Ítem creado: ${res.datos?.id}`,'success'); closeModal(); inventario(); }
+  else toast(res.mensaje,'error');
+}
+
+// ============================================================
+// VISTA: USUARIOS
+// ============================================================
+async function usuarios() {
+  const res = await callApi('USUARIOS', 'listar', {});
+  const lista = res.ok ? res.datos : [];
+  mainContent(`
+  <div class="card">
+    <div class="card-header">
+      <h3><i class="fas fa-user-lock" style="color:var(--blue);margin-right:8px"></i>Usuarios & Accesos <span style="font-size:13px;font-weight:400;color:var(--text-muted)">(${lista.length})</span></h3>
+      <button class="btn btn-primary btn-sm" onclick="modalNuevoUsuario()"><i class="fas fa-plus"></i> Nuevo Usuario</button>
+    </div>
+    <div class="card-body" style="padding:16px 20px">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Username</th><th>Empleado</th><th>Rol</th><th>Activo</th><th>Último Acceso</th><th>Acciones</th></tr></thead>
+          <tbody>
+            ${lista.map(u => `
+              <tr>
+                <td class="td-mono">${u.ID_USUARIO}</td>
+                <td><strong>${u.USERNAME}</strong></td>
+                <td>${u.EMPLEADO}</td>
+                <td><span class="pill pill-navy">${u.ROL}</span></td>
+                <td><span class="pill pill-dot ${u.ACTIVO?'pill-success':'pill-danger'}">${u.ACTIVO?'Activo':'Inactivo'}</span></td>
+                <td style="font-size:12px;color:var(--text-muted)">${u.ULTIMO_ACCESO||'-'}</td>
+                <td>
+                  <div style="display:flex;gap:4px">
+                    <button class="btn btn-secondary btn-sm" onclick="toggleUsuario('${u.ID_USUARIO}')">
+                      <i class="fas fa-${u.ACTIVO?'ban':'check'}"></i> ${u.ACTIVO?'Inactivar':'Activar'}
+                    </button>
+                  </div>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>`);
+}
+
+async function toggleUsuario(id) {
+  const res = await callApi('USUARIOS', 'toggleActivo', { idUsuario: id });
+  if (res.ok) { toast(res.mensaje, 'success'); usuarios(); }
+  else toast(res.mensaje, 'error');
+}
+
+function modalNuevoUsuario() {
+  openModal('Nuevo Usuario', `
+    <div class="form-grid">
+      <div class="f-group full"><label>Empleado (nombre)</label><input id="usem" type="text" placeholder="Nombre completo"/></div>
+      <div class="f-group"><label>Username *</label><input id="usu" type="text" placeholder="usuario.apellido"/></div>
+      <div class="f-group"><label>Rol *</label>
+        <select id="usrol"><option>Administrador</option><option>Coordinador</option><option>Técnico</option></select>
+      </div>
+    </div>
+    <div style="background:var(--info-bg);border-radius:8px;padding:10px 14px;margin-top:10px;font-size:12px;color:var(--info)">
+      <i class="fas fa-info-circle"></i> La contraseña inicial será <strong>Erp2024*</strong>. El usuario deberá cambiarla al ingresar.
+    </div>`,
+    [{label:'Cancelar', cls:'btn-secondary', action:'closeModal()'},
+     {label:'Crear Usuario', cls:'btn-primary', action:'crearUsuario()'}]);
+}
+
+async function crearUsuario() {
+  const datos = { EMPLEADO:v('usem'), USERNAME:v('usu'), ROL:v('usrol') };
+  if (!datos.USERNAME) { toast('Username obligatorio','warning'); return; }
+  const res = await callApi('USUARIOS', 'crear', datos);
+  if (res.ok) { toast(res.mensaje,'success'); closeModal(); usuarios(); }
+  else toast(res.mensaje,'error');
+}
+
+// ============================================================
+// VISTA: EMPRESA
+// ============================================================
+async function empresa() {
+  const res = await callApi('EMPRESA', 'obtener', {});
+  const d = res.ok ? res.datos : {};
+  mainContent(`
+  <div class="card" style="max-width:680px">
+    <div class="card-header">
+      <h3><i class="fas fa-building" style="color:var(--blue);margin-right:8px"></i>Datos de Mi Empresa</h3>
+      <button class="btn btn-primary btn-sm" onclick="guardarEmpresa('${d.ID_EMPRESA||''}')"><i class="fas fa-save"></i> Guardar</button>
+    </div>
+    <div class="card-body">
+      <div class="form-grid">
+        <div class="f-group full"><label>Nombre / Razón Social *</label><input id="epn" value="${d.NOMBRE||''}" /></div>
+        <div class="f-group"><label>NIT *</label><input id="epnit" value="${d.NIT||''}" /></div>
+        <div class="f-group"><label>Teléfono</label><input id="eptel" value="${d.TELEFONO||''}" /></div>
+        <div class="f-group full"><label>Dirección</label><input id="epdir" value="${d.DIRECCION||''}" /></div>
+        <div class="f-group full"><label>Email</label><input id="epemail" type="email" value="${d.EMAIL||''}" /></div>
+        <div class="f-group full"><label>Logo (URL)</label><input id="eplogo" value="${d.LOGO||''}" placeholder="https://…"/></div>
+      </div>
+    </div>
+  </div>`);
+}
+
+async function guardarEmpresa(id) {
+  const datos = { ID_EMPRESA:id, NOMBRE:v('epn'), NIT:v('epnit'), TELEFONO:v('eptel'), DIRECCION:v('epdir'), EMAIL:v('epemail'), LOGO:v('eplogo') };
+  if (!datos.NOMBRE || !datos.NIT) { toast('Nombre y NIT obligatorios','warning'); return; }
+  const res = await callApi('EMPRESA', 'actualizar', datos);
+  toast(res.ok ? 'Empresa actualizada' : res.mensaje, res.ok ? 'success' : 'error');
+}
+
+// ============================================================
+// VISTA: MAESTROS
+// ============================================================
+function maestros() {
+  const items = [
+    ['fas fa-map-marker-alt','Áreas','Departamentos internos de la empresa','MAESTROS','listarAreas'],
+    ['fas fa-sitemap','Centros de Costo','Centros de imputación financiera','MAESTROS','listarCentrosCosto'],
+    ['fas fa-car','Tipos de Vehículo','Categorías de la flota vehicular','MAESTROS','listarTiposVehiculo'],
+    ['fas fa-tools','Tipos de Servicio','Tipos de servicio ofrecidos','MAESTROS','listarTiposServicio'],
+    ['fas fa-clipboard-check','Estados OT','Estados del ciclo de órdenes de trabajo','MAESTROS','listarEstadosOT'],
+    ['fas fa-shopping-cart','Estados de Compra','Flujo de estados de órdenes de compra','MAESTROS','listarEstadosCompra'],
+    ['fas fa-hard-hat','Tipos de EPP','Equipos de protección personal','MAESTROS','listarTiposEPP'],
+    ['fas fa-ambulance','Tipos de Accidente','Clasificación de accidentes SST','MAESTROS','listarTiposAccidente'],
+    ['fas fa-university','Bancos','Entidades bancarias registradas','MAESTROS','listarBancos'],
+    ['fas fa-credit-card','Tipos de Pago','Formas de pago disponibles','MAESTROS','listarTiposPago'],
+    ['fas fa-ruler','Unidades de Medida','Unidades del inventario','MAESTROS','listarUnidades'],
+  ];
+  mainContent(`
+  <div style="margin-bottom:18px">
+    <h3 style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px">Tablas Maestras</h3>
+    <p style="font-size:13px;color:var(--text-muted)">Catálogos y listas de valores del sistema</p>
+  </div>
+  <div class="config-grid">
+    ${items.map(([icon, title, desc, mod, acc]) => `
+      <div class="config-item" onclick="verMaestro('${title}','${mod}','${acc}')" style="cursor:pointer">
+        <div class="config-item-icon"><i class="${icon}"></i></div>
+        <h4>${title}</h4>
+        <p>${desc}</p>
+        <div style="margin-top:8px"><span class="pill pill-navy" style="font-size:11px"><i class="fas fa-arrow-right"></i> Ver tabla</span></div>
+      </div>`).join('')}
+  </div>`);
+}
+
+async function verMaestro(titulo, modulo, accion) {
+  const res = await callApi(modulo, accion, {});
+  const lista = res.ok ? res.datos : [];
+  const cols = lista.length > 0 ? Object.keys(lista[0]) : [];
+  openModal(titulo, `
+    <div style="max-height:360px;overflow-y:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead><tr>${cols.map(c=>`<th style="background:var(--navy);color:white;padding:8px 12px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase">${c}</th>`).join('')}</tr></thead>
+        <tbody>${lista.map((row,i)=>`<tr style="background:${i%2?'#f4f6fb':'white'}">
+          ${cols.map(c=>`<td style="padding:9px 12px;border-bottom:1px solid var(--border);font-size:12.5px">${row[c]??''}</td>`).join('')}
+        </tr>`).join('') || `<tr><td colspan="${cols.length}" style="padding:32px;text-align:center;color:var(--text-muted)">Sin registros</td></tr>`}
+        </tbody>
+      </table>
+    </div>`,
+    [{label:'Cerrar', cls:'btn-secondary', action:'closeModal()'}]);
+}
+
+// ============================================================
+// VISTA: SISTEMA
+// ============================================================
+function sistema() {
+  mainContent(`
+  <div style="margin-bottom:18px">
+    <h3 style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:4px">Administración del Sistema</h3>
+    <p style="font-size:13px;color:var(--text-muted)">Herramientas de mantenimiento y configuración</p>
+  </div>
+  <div class="config-grid">
+    ${[
+      ['fas fa-play-circle','Inicializar Sistema','Crea hojas y datos base necesarios. Ejecutar solo en primera instalación.','navy','btnInicializar()'],
+      ['fas fa-paint-brush','Formatear Hojas','Aplica formato profesional (headers, colores, bordes) a todas las hojas.','blue','btnFormatear()'],
+      ['fas fa-shield-alt','Proteger Configuración','Protege las hojas de configuración crítica contra edición accidental.','success','btnProteger()'],
+      ['fas fa-chart-bar','Actualizar Indicadores','Recalcula todos los KPIs del dashboard.','warning','navigate(\'dashboard\')'],
+      ['fas fa-database','Ver Estructura','Muestra las hojas del sistema.','navy','btnVerEstructura()'],
+    ].map(([icon,title,desc,color,action]) => `
+      <div class="config-item">
+        <div class="config-item-icon" style="background:var(--${color})"><i class="${icon}"></i></div>
+        <h4>${title}</h4>
+        <p>${desc}</p>
+        <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="${action}">
+          <i class="${icon}"></i> Ejecutar
+        </button>
+      </div>`).join('')}
+  </div>
+  <div class="card" style="margin-top:20px;max-width:600px">
+    <div class="card-header"><h3>Información del Sistema</h3></div>
+    <div class="card-body">
+      <table style="width:100%;border-collapse:collapse;font-size:13.5px">
+        ${[
+          ['Versión','v2.0.0'],['Motor','Google Apps Script'],['Base de datos','Google Sheets'],
+          ['Autenticación','Token + SHA-256'],['Auditoría','LOG_AUDITORIA (automático)'],
+          ['Modo actual', isDemo() ? '🟡 DEMO (sin backend)' : '🟢 Producción'],
+        ].map(([k,v])=>`<tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:10px 12px;font-weight:600;color:var(--navy);width:50%">${k}</td>
+          <td style="padding:10px 12px;color:var(--text-mid);font-family:'DM Mono',monospace;font-size:12.5px">${v}</td>
+        </tr>`).join('')}
+      </table>
+    </div>
+  </div>`);
+}
+
+async function btnInicializar() {
+  if (!confirm('¿Inicializar el sistema? Esto creará las hojas y datos base.')) return;
+  const res = await callApi('SISTEMA', 'inicializar', {});
+  toast(res.ok ? res.mensaje : res.mensaje, res.ok ? 'success' : 'error');
+}
+
+async function btnFormatear() {
+  const res = await callApi('SISTEMA', 'formatear', {});
+  toast(res.ok ? res.mensaje : res.mensaje, res.ok ? 'success' : 'error');
+}
+
+async function btnProteger() {
+  const res = await callApi('SISTEMA', 'proteger', {});
+  toast(res.ok ? 'Hojas protegidas correctamente' : res.mensaje, res.ok ? 'success' : 'error');
+}
+
+function btnVerEstructura() {
+  const hojas = ['EMPRESA','EMPLEADOS','USUARIOS','ROLES','PERMISOS','CLIENTES','PROVEEDORES',
+    'INVENTARIO','ORDENES_TRABAJO','SUCURSALES','AREAS','CENTROS_COSTO','BANCOS','CONFIG_MENU','LOG_AUDITORIA'];
+  openModal('Estructura del Sistema', `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      ${hojas.map(h=>`<div style="background:var(--bg);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;font-size:13px">
+        <i class="fas fa-table" style="color:var(--blue);font-size:12px"></i>
+        <span style="font-family:'DM Mono',monospace;font-weight:500">${h}</span>
+      </div>`).join('')}
+    </div>`,
+    [{label:'Cerrar', cls:'btn-secondary', action:'closeModal()'}]);
+}
+
+// ============================================================
+// UTILIDADES UI
+// ============================================================
+function v(id) { return (document.getElementById(id)?.value || '').trim(); }
+
+function filtrarTabla(input, tablaId, colIndex = null) {
+  const q = (typeof input === 'object' ? input.value : input).toLowerCase();
+  const rows = document.querySelectorAll(`#${tablaId} tbody tr`);
+  rows.forEach(row => {
+    const cells = row.querySelectorAll('td');
+    let show;
+    if (colIndex !== null) {
+      show = cells[colIndex] && (cells[colIndex].textContent.toLowerCase().includes(q) || q === '');
+    } else {
+      show = [...cells].some(td => td.textContent.toLowerCase().includes(q));
+    }
+    row.style.display = show ? '' : 'none';
+  });
+}
+
+function openModal(title, bodyHtml, botones = []) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = bodyHtml;
+  document.getElementById('modalFooter').innerHTML = botones.map(b =>
+    `<button class="btn ${b.cls}" onclick="${b.action}">${b.label}</button>`
+  ).join('');
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+
+function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+function closeModalOnBg(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+
+function toast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  const icons = { success:'check-circle', error:'times-circle', warning:'exclamation-triangle', info:'info-circle' };
+  el.innerHTML = `<i class="fas fa-${icons[type]||'info-circle'}"></i> ${msg}`;
+  container.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateX(100%)'; el.style.transition='all .4s'; setTimeout(()=>el.remove(),400); }, 3500);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('loginUser').focus();
+  if (isDemo()) {
+    document.querySelectorAll('.demo-hint').forEach(el => el.style.display = 'block');
+  }
+});
+</script>
+</body>
+</html>
